@@ -15,7 +15,7 @@ A mobile-friendly friend-group guessing game. Players write five facts each, the
 
 ## Run offline
 
-Open `index.html` in a modern browser or publish the repository with GitHub Pages. Offline mode works without a Supabase project.
+Open `index.html` in a modern browser or publish the repository with GitHub Pages. Offline mode does not load Supabase or require a network connection; online dependencies are loaded only when you choose online play.
 
 ## Enable online multiplayer
 
@@ -38,8 +38,8 @@ This is a starter implementation for a private, casual friends game. The include
 ## Publish with GitHub Pages
 
 1. Open repository Settings → Pages.
-2. Choose **Deploy from a branch**.
-3. Select `main` and `/(root)`, then Save.
+2. Under **Build and deployment**, choose **GitHub Actions** as the source.
+3. The included workflow at `.github/workflows/pages.yml` will publish the root folder on pushes to `main`.
 4. Wait for the Pages deployment. Your site will be available at:
 
 `https://cobra546.github.io/GUESS-THE-FACTS/`
@@ -47,5 +47,5 @@ This is a starter implementation for a private, casual friends game. The include
 ## Notes
 
 - The app is static HTML/CSS/JavaScript and does not require a build step.
-- Online mode is not active until Supabase is configured.
+- Online mode is not active until a dedicated Supabase project is configured and its URL/publishable key are added to `app.js`.
 - Offline mode is local to one device; it does not sync between phones.
