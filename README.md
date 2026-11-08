@@ -4,7 +4,7 @@ A mobile-friendly friend-group guessing game. Players write five facts each, the
 
 ## Included
 
-- Offline / same-device play for 2–10 players.
+- Offline / same-device play for 3–10 players.
 - Online rooms with a six-character room code.
 - Five facts per player.
 - Randomized fact order and randomized player turn order.
