@@ -1,8 +1,8 @@
 // Online mode loads Supabase only when requested, so same-device play can start without network access.
 // Add your dedicated Supabase project URL and publishable key after running supabase.sql.
 // Never put a service_role/secret key in this public browser app.
-const SUPABASE_URL = "";
-const SUPABASE_PUBLISHABLE_KEY = "";
+const SUPABASE_URL = "https://antqqabimhgepykkkmwl.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_w6n4kCXq8cJoyd-8PE0HoQ_YBPYoI_7";
 let supabase = null;
 async function connectSupabase(){
   if(supabase)return supabase;
