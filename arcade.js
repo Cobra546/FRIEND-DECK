@@ -78,6 +78,7 @@ function onlineChoice(players,cb,exclude){return '<div class="choice">'+players.
 function bindOnlineChoices(cb){play.querySelectorAll('[data-online-choice]').forEach(b=>b.onclick=()=>cb(b.dataset.onlineChoice))}
 function renderOnline(){
  if(!online||!online.snapshot)return;
+ if(online.snapshot.phase==='lobby')autoEndedRound=null;
  renderingOnline=true;
  const s=online.snapshot,pub=s.publicState||{},priv=s.privateState||{},me=s.playerId,players=pub.players||s.players.map(p=>({id:p.id,name:p.display_name,active:true})),mine=players.find(p=>p.id===me);
  let body="",title=state.title;
@@ -136,5 +137,5 @@ function renderOnline(){
  bindModeration();renderingOnline=false;
 }
 
-hub.querySelectorAll('[data-game]').forEach(b=>b.onclick=()=>{if(b.dataset.game==='guess_the_facts'){show('homeScreen');return}startSetup(b.dataset.game)});
+hub.querySelectorAll('[data-game]').forEach(b=>b.onclick=()=>{if(b.dataset.game==='guess_the_facts'){let back=document.getElementById('arcadeReturn');if(!back){back=document.createElement('button');back.id='arcadeReturn';back.className='btn btn-light';back.textContent='← All games';document.querySelector('#homeScreen .hero-actions').prepend(back);back.onclick=()=>show('arcadeHub')}show('homeScreen');return}startSetup(b.dataset.game)});
 })();
