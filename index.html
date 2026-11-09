@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#fff8e9"><meta name="description" content="Guess who wrote each surprising fact. Play with 3 to 10 friends on one device or online.">
-  <title>Guess the Facts ✦</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <meta name="theme-color" content="#fff8e9"><meta name="description" content="Friend Deck: five party games for friends. Create a room, join online, or play offline.">
+  <title>Friend Deck — Party Games ✦</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=frienddeck-20261109">
 </head>
 <body>
   <div class="paper-grain"></div>
-  <header class="topbar"><a class="brand" href="#" aria-label="Guess the Facts home"><span class="brand-mark">?</span><span>GUESS THE <b>FACTS</b></span></a><div class="top-actions"><span id="connectionPill" class="connection-pill"><i></i> Offline ready</span><button class="icon-btn" id="soundToggle" aria-label="Toggle sound">♫</button></div></header>
+  <header class="topbar"><a class="brand" href="#" aria-label="Guess the Facts home"><span class="brand-mark">?</span><span>FRIEND <b>DECK</b></span></a><div class="top-actions"><span id="connectionPill" class="connection-pill"><i></i> Offline ready</span><button class="icon-btn" id="soundToggle" aria-label="Toggle sound">♫</button></div></header>
   <main id="app" class="shell">
     <section id="homeScreen" class="screen active">
       <div class="hero">
-        <div class="hero-copy"><div class="eyebrow"><span class="sparkle">✳</span> THE FRIEND GROUP GAME</div><h1>How well do<br>you <em>know</em> them?</h1><p>Five facts each. One mystery at a time. Can you guess who’s who?</p><div class="hero-actions"><button class="btn btn-dark" id="onlineCreate">Create online room <span>↗</span></button><button class="btn btn-light" id="offlineCreate">Play on this device <span>→</span></button></div><div class="micro-proof"><span>✦ Up to 10 players</span><span>✦ 5 facts each</span><span>✦ Maximum fun</span></div></div>
+        <div class="hero-copy"><div class="eyebrow"><span class="sparkle">✳</span> THE FRIEND GROUP GAME</div><h1>Who said <em>that?</em></h1><p>Five anonymous facts. One friend group. A whole lot of surprises.</p><div class="hero-actions"><button class="btn btn-dark" id="onlineCreate">Create online room <span>↗</span></button><button class="btn btn-light" id="offlineCreate">Play on this device <span>→</span></button></div><div class="micro-proof"><span>✦ Up to 10 players</span><span>✦ 5 facts each</span><span>✦ Maximum fun</span></div></div>
         <div class="note-stage" aria-label="Colourful sticky notes"><div class="tape"></div><article class="sticky note-yellow tilt-a"><small>FUN FACT #01</small><b>I can solve a Rubik’s cube in under a minute.</b><span>— ???</span></article><article class="sticky note-pink tilt-b"><small>FUN FACT #02</small><b>I’ve never watched a full horror movie.</b><span>— ???</span></article><article class="sticky note-blue tilt-c"><small>FUN FACT #03</small><b>I once met my favourite celebrity!</b><span>— ???</span></article><div class="doodle">✳</div><div class="tiny-star">✦</div></div>
       </div>
       <section class="how-section"><div class="section-kicker">THE RULES ARE SIMPLE</div><h2>Write it. Shuffle it. Guess it.</h2><div class="steps-grid"><article class="step-card"><span class="step-num">01</span><div class="step-icon pink-icon">✎</div><h3>Drop your facts</h3><p>Everyone writes five facts about themselves on colourful notes.</p></article><article class="step-card"><span class="step-num">02</span><div class="step-icon yellow-icon">⤨</div><h3>Mix them up</h3><p>All facts are shuffled. A random player gets the first turn.</p></article><article class="step-card"><span class="step-num">03</span><div class="step-icon green-icon">✓</div><h3>Make your guess</h3><p>Pick a name. The answer is revealed instantly and points are updated.</p></article></div></section>
@@ -38,6 +38,6 @@
     </section>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
   </main>
-  <script type="module" src="app.js"></script>
-  <script src="arcade.js" defer></script>
+  <script type="module" src="app.js?v=frienddeck-20261109"></script>
+  <script src="arcade.js?v=frienddeck-20261109" defer></script>
 </body></html>
