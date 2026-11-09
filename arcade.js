@@ -1,8 +1,74 @@
 (() => {
 const app=document.getElementById('app');if(!app||document.getElementById('arcadeHub'))return;
 const games=[['burning_bridges','🔥','Burning Bridges',5,15],['guess_the_facts','✦','Guess the Facts',3,10],['collect_fruits','🍉','Collect Fruits',4,20],['imposter','🕵️','Who Is the Imposter',4,14],['mafia','🌙','Who Is Mafia',5,20]];
-const css=document.createElement('style');css.textContent='#arcadeHub .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0}#arcadeHub .card{background:#fff;border:1px solid #e9e1d3;border-radius:16px;padding:20px;display:flex;flex-direction:column;min-height:190px}#arcadeHub .card h2{font-size:21px;margin:10px 0}#arcadeHub .card p{font-size:12px;color:#81796d;flex:1;line-height:1.6}#arcadeHub .card small{font-size:10px;color:#888;margin-bottom:12px}#arcadeHub .arcHead{text-align:center;padding:30px 0}#arcadeHub .arcHead h1{font-size:clamp(38px,6vw,60px)}#arcadePlay{max-width:720px;margin:auto}#arcadePlay .box{background:#fff;border:1px solid #e9e1d3;border-radius:16px;padding:20px;margin:14px 0}#arcadePlay button{margin:4px}#arcadePlay input,#arcadePlay textarea{width:100%;padding:12px;border:1px solid #e9e1d3;border-radius:10px;font:inherit}#arcadePlay .choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}#arcadePlay .choice button{padding:12px;border:1px solid #e9e1d3;border-radius:10px;background:#fffaf1;font-weight:700}#arcadePlay .secret{padding:25px;background:#fff0c5;text-align:center;border-radius:12px;font:700 28px Fredoka;margin:12px 0}#arcadePlay .muted{font-size:12px;color:#81796d;line-height:1.6}#arcadePlay .result{padding:13px;background:#eaf4e8;border-radius:10px;margin:8px 0;text-align:center;font-weight:700}#arcadePlay .players{display:grid;gap:7px}#arcadePlay .players div{padding:10px;background:#fffaf1;border-radius:9px}.fire-pop{animation:arcFire .8s ease 2}@keyframes arcFire{0%,100%{transform:scale(1)}50%{transform:scale(1.06);background:#ffe0c2;box-shadow:0 0 0 8px #ffb26a44}}.arcade-chat{max-height:180px;overflow:auto;background:#faf7f0;padding:10px;border-radius:10px;font-size:12px}';document.head.append(css);
-const hub=document.createElement('section');hub.id='arcadeHub';hub.className='screen active';hub.innerHTML='<div class="arcHead"><div class="eyebrow">THE FRIEND GROUP ARCADE</div><h1>Pick your <em>game.</em></h1><p>Five games. One friend group.</p></div><div class="cards">'+games.map(g=>'<article class="card"><div style="font-size:30px">'+g[1]+'</div><h2>'+g[2]+'</h2><p>'+ (g[0]==='guess_the_facts'?'Five facts each. Shuffle and guess who wrote each one.':'Play offline by passing one phone, or online with a room code. Private cards stay hidden.')+'</p><small>'+g[3]+'–'+g[4]+' players · Online & offline</small><button class="btn '+(g[0]==='guess_the_facts'?'btn-dark':'btn-light')+'" data-game="'+g[0]+'">'+(g[0]==='guess_the_facts'?'Open existing game':'Play offline')+' →</button></article>').join('')+'</div>';
+const css=document.createElement('style');css.textContent=`
+#arcadeHub{--deck-ink:#24222a;--deck-muted:#77717d}
+#arcadeHub .deck-hero{position:relative;overflow:hidden;border-radius:28px;padding:34px 30px 30px;background:linear-gradient(135deg,#211e2b 0%,#34283d 55%,#56374e 100%);color:#fff;margin:28px 0 25px;box-shadow:0 22px 50px #30223825}
+#arcadeHub .deck-hero:before,#arcadeHub .deck-hero:after{content:"";position:absolute;border:1px solid #ffffff24;border-radius:50%;pointer-events:none}
+#arcadeHub .deck-hero:before{width:330px;height:330px;right:-90px;top:-170px}
+#arcadeHub .deck-hero:after{width:240px;height:240px;right:35px;bottom:-190px}
+#arcadeHub .deck-kicker{font-size:10px;letter-spacing:.22em;font-weight:800;color:#eac5d9}
+#arcadeHub .deck-hero h1{font-size:clamp(38px,6vw,64px);max-width:580px;margin:13px 0 10px;color:#fff}
+#arcadeHub .deck-hero h1 em{color:#ffc4d7}
+#arcadeHub .deck-hero p{max-width:490px;color:#e5dce7;font-size:14px;line-height:1.7;margin:0}
+#arcadeHub .deck-preview{position:relative;min-height:210px;margin:25px 0 5px;display:flex;align-items:center;justify-content:center;gap:12px}
+#arcadeHub .flash-card{position:relative;width:min(31%,205px);min-height:165px;padding:17px 15px;border-radius:7px;color:#28232a;box-shadow:0 12px 28px #120d1a55;display:flex;flex-direction:column;justify-content:space-between}
+#arcadeHub .flash-card:nth-child(1){background:#ffe78c;transform:rotate(-8deg) translateY(8px)}
+#arcadeHub .flash-card:nth-child(2){background:#ffc3d2;transform:rotate(4deg) translateY(-7px);z-index:2}
+#arcadeHub .flash-card:nth-child(3){background:#b8e2f4;transform:rotate(9deg) translateY(10px)}
+#arcadeHub .flash-card small{font-size:9px;font-weight:800;letter-spacing:.14em;opacity:.62}
+#arcadeHub .flash-card b{font:600 16px/1.25 Fredoka,sans-serif;margin:13px 0}
+#arcadeHub .flash-card span{font-size:9px;font-weight:800;opacity:.58;text-align:right}
+#arcadeHub .deck-chits{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:13px}
+#arcadeHub .deck-chit{background:#ffffff18;border:1px dashed #ffffff65;color:#fff;border-radius:30px;padding:8px 13px;font-size:10px;font-weight:800;letter-spacing:.04em;transform:rotate(var(--tilt))}
+#arcadeHub .deck-section-head{text-align:center;margin:34px 0 12px}
+#arcadeHub .deck-section-head .eyebrow{color:#9a8296}
+#arcadeHub .deck-section-head h2{font-size:30px;margin:8px 0}
+#arcadeHub .deck-section-head p{font-size:12px;color:#81796d}
+#arcadeHub .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;margin:20px 0 34px}
+#arcadeHub .card{position:relative;overflow:hidden;background:#fff;border:1px solid #e9e1d3;border-radius:18px;padding:19px;display:flex;flex-direction:column;min-height:215px;box-shadow:0 8px 22px #3325150b;transition:transform .2s,box-shadow .2s}
+#arcadeHub .card:hover{transform:translateY(-4px);box-shadow:0 15px 30px #33251516}
+#arcadeHub .card .game-icon{width:48px;height:48px;border-radius:15px;background:#f7edf4;display:grid;place-items:center;font-size:27px}
+#arcadeHub .card h2{font-size:21px;margin:12px 0 8px}
+#arcadeHub .card p{font-size:12px;color:#81796d;flex:1;line-height:1.6;margin-bottom:14px}
+#arcadeHub .card small{font-size:10px;color:#888;margin:0 0 12px}
+#arcadeHub .card .open-game{width:100%;justify-content:space-between;background:#27232d;color:#fff}
+#arcadeHub .arcHead{text-align:center;padding:20px 0}
+#arcadeHub .arcHead h1{font-size:clamp(38px,6vw,60px)}
+#arcadePlay{max-width:720px;margin:auto}
+#arcadePlay .box{background:#fff;border:1px solid #e9e1d3;border-radius:16px;padding:20px;margin:14px 0}
+#arcadePlay button{margin:4px}
+#arcadePlay input,#arcadePlay textarea{width:100%;padding:12px;border:1px solid #e9e1d3;border-radius:10px;font:inherit}
+#arcadePlay .choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+#arcadePlay .choice button{padding:12px;border:1px solid #e9e1d3;border-radius:10px;background:#fffaf1;font-weight:700}
+#arcadePlay .secret{padding:25px;background:#fff0c5;text-align:center;border-radius:12px;font:700 28px Fredoka;margin:12px 0}
+#arcadePlay .muted{font-size:12px;color:#81796d;line-height:1.6}
+#arcadePlay .result{padding:13px;background:#eaf4e8;border-radius:10px;margin:8px 0;text-align:center;font-weight:700}
+#arcadePlay .players{display:grid;gap:7px}
+#arcadePlay .players div{padding:10px;background:#fffaf1;border-radius:9px}
+#arcadePlay .mode-wrap{max-width:560px;margin:0 auto}
+#arcadePlay .mode-card{background:#fff;border:1px solid #e9e1d3;border-radius:22px;padding:22px;box-shadow:0 14px 34px #33251510}
+#arcadePlay .mode-card h2{margin:4px 0 7px}
+#arcadePlay .mode-card>p{font-size:12px;color:#81796d;line-height:1.6}
+#arcadePlay .mode-name{margin:15px 0 12px}
+#arcadePlay .mode-actions{display:grid;gap:9px}
+#arcadePlay .mode-actions .btn{width:100%;margin:0;min-height:48px}
+#arcadePlay .join-row{display:grid;grid-template-columns:1fr auto;gap:8px}
+#arcadePlay .join-row .btn{width:auto}
+#arcadePlay .mode-divider{display:flex;align-items:center;gap:10px;color:#aaa;font-size:9px;letter-spacing:.14em;font-weight:800;margin:4px 0}
+#arcadePlay .mode-divider:before,#arcadePlay .mode-divider:after{content:"";height:1px;background:#eee6dc;flex:1}
+#arcadePlay .mode-offline{background:#f5f0e7;color:#29242d}
+.fire-pop{animation:arcFire .8s ease 2}
+@keyframes arcFire{0%,100%{transform:scale(1)}50%{transform:scale(1.06);background:#ffe0c2;box-shadow:0 0 0 8px #ffb26a44}}
+.arcade-chat{max-height:180px;overflow:auto;background:#faf7f0;padding:10px;border-radius:10px;font-size:12px}
+@media(max-width:600px){#arcadeHub .deck-hero{padding:27px 18px;border-radius:20px;margin-top:18px}#arcadeHub .deck-preview{min-height:180px;gap:5px}#arcadeHub .flash-card{width:32%;min-height:142px;padding:12px 10px}#arcadeHub .flash-card b{font-size:13px}#arcadeHub .deck-chit{font-size:9px;padding:7px 10px}#arcadeHub .cards{grid-template-columns:1fr 1fr;gap:10px}#arcadeHub .card{padding:14px;min-height:225px}#arcadeHub .card h2{font-size:18px}#arcadeHub .card p{font-size:11px}#arcadePlay .mode-card{padding:17px}#arcadePlay .join-row{grid-template-columns:1fr}#arcadePlay .join-row .btn{width:100%}}
+@media(max-width:380px){#arcadeHub .cards{grid-template-columns:1fr}#arcadeHub .flash-card{min-height:128px}#arcadeHub .flash-card b{font-size:12px}}
+`;document.head.append(css);
+const teasers=[['FUN FACT #01','I can name 20 footballers just by their clubs.','— ???'],['HOT TAKE #02','Pineapple belongs on pizza.','— ???'],['SECRET TALENT #03','I can recognise songs in two seconds.','— ???'],['PLOT TWIST #04','I have never watched a full horror movie.','— ???'],['RANDOM #05','I would choose a night drive over a party.','— ???'],['DID YOU KNOW #06','I once stayed awake for an entire movie marathon.','— ???']];
+const flashPicks=[...teasers].sort(()=>Math.random()-.5).slice(0,3);
+const chits=['WHO KNOWS WHO?','ONE SECRET','FIVE CLUES','MAKE YOUR GUESS','FRIEND GROUP CHAOS'].sort(()=>Math.random()-.5).slice(0,4);
+const hub=document.createElement('section');hub.id='arcadeHub';hub.className='screen active';
+hub.innerHTML='<div class="deck-hero"><div class="deck-kicker">✦ YOUR FRIEND GROUP, SHUFFLED ✦</div><h1>Welcome to <em>Friend Deck.</em></h1><p>Every friend has a plot twist. Pick a game, pass the secrets around, and find out who really knows the group.</p><div class="deck-preview">'+flashPicks.map((x)=>'<article class="flash-card"><small>'+x[0]+'</small><b>'+x[1]+'</b><span>'+x[2]+'</span></article>').join('')+'</div><div class="deck-chits">'+chits.map((x,i)=>'<span class="deck-chit" style="--tilt:'+((i%2?3:-3))+'deg">'+x+'</span>').join('')+'</div></div><div class="deck-section-head"><div class="eyebrow">PICK YOUR NEXT CHAOS</div><h2>Choose a game 🎴</h2><p>Open any game to choose how everyone plays.</p></div><div class="cards">'+games.map(g=>'<article class="card"><div class="game-icon">'+g[1]+'</div><h2>'+(g[0]==='guess_the_facts'?'Who Said That?':g[2])+'</h2><p>'+ (g[0]==='guess_the_facts'?'Five anonymous facts. One mystery at a time. Can you guess who said that?':g[0]==='burning_bridges'?'Ask, choose, and let the coin decide what gets revealed.':g[0]==='collect_fruits'?'Collect matching fruit chits and complete your secret set.':g[0]==='imposter'?'Describe the secret without giving it away. Find the imposter.':'Secret roles, night turns, discussion, and a group vote.')+'</p><small>'+g[3]+'–'+g[4]+' players · Online & offline</small><button type="button" class="btn open-game" data-game="'+g[0]+'">Open game <span>↗</span></button></article>').join('')+'</div><footer class="footer">SHUFFLE THE CARDS. REVEAL THE CHAOS. <span>✦</span></footer>';
 const play=document.createElement('section');play.id='arcadePlay';play.className='screen';app.insertBefore(hub,app.firstChild);app.insertBefore(play,hub.nextSibling);document.getElementById('homeScreen').classList.remove('active');
 let state=null;
 function show(id){app.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
@@ -100,24 +166,40 @@ async function api(action,extra={}) {
  const res=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json","apikey":API_KEY},body:JSON.stringify(body)});
  const data=await res.json();if(!res.ok||data.error)throw new Error(data.error||"Online request failed.");return data;
 }
-function onlineButtons(id){const g=games.find(x=>x[0]===id);const card=hub.querySelector('[data-game="'+id+'"]').closest('.card');const b=document.createElement('button');b.className='btn btn-dark';b.textContent='Play online ↗';b.onclick=()=>onlineEntry(id);card.append(b);}
-games.filter(g=>g[0]!=='guess_the_facts').forEach(g=>onlineButtons(g[0]));
 ['onlineCreate','offlineCreate'].forEach(id=>document.getElementById(id)?.addEventListener('click',()=>{hub.classList.remove('active');play.classList.remove('active')}));
-async function onlineEntry(id){
- const name=prompt("Your player name?");if(!name?.trim())return;
- const choice=prompt("Type CREATE to host a new room, or JOIN to enter a room code.");
- if(!choice)return;
+async function onlineEntry(id,kind,name,code=""){
+ if(!name||!name.trim())return alert("Enter your player name first.");
  try{
   let data;
-  if(choice.trim().toUpperCase()==="CREATE")data=await api("create_room",{name:name.trim(),gameType:id});
-  else if(choice.trim().toUpperCase()==="JOIN"){const code=prompt("Enter the 6-character room code:");if(!code)return;data=await api("join_room",{name:name.trim(),code:code.trim().toUpperCase()});}
-  else return alert("Please type CREATE or JOIN.");
+  if(kind==="create")data=await api("create_room",{name:name.trim(),gameType:id});
+  else if(kind==="join"){if(!code.trim())return alert("Enter the 6-character room code.");data=await api("join_room",{name:name.trim(),code:code.trim().toUpperCase()});}
+  else return;
   online={roomId:data.roomId,token:data.token,playerId:data.playerId,isHost:data.isHost,code:data.code,gameType:id,privateState:data.privateState||{},snapshot:null};
   state={id,title:games.find(x=>x[0]===id)[2],min:games.find(x=>x[0]===id)[3],max:games.find(x=>x[0]===id)[4]};
   show('arcadePlay');saveOnlineSession();
-  if(pollHandle)clearInterval(pollHandle);await refreshOnline();pollHandle=setInterval(refreshOnline,1300);
+  if(pollHandle)clearInterval(pollHandle);await refreshOnline();if(online)pollHandle=setInterval(refreshOnline,1300);
  }catch(e){alert(e.message);}
 }
+function launchLegacyGuess(mode,name,code){
+ window.__friendDeckEntry={name:name||"",code:code||""};
+ show("homeScreen");
+ const id=mode==="create"?"onlineCreate":mode==="join"?"onlineJoin":"offlineCreate";
+ const button=document.getElementById(id);
+ if(!button){alert("That game option is not ready yet. Refresh the page and try again.");return;}
+ button.click();
+}
+function openGameMode(id){
+ const g=games.find(x=>x[0]===id);if(!g)return;
+ state={id,title:g[2],min:g[3],max:g[4],players:[],history:{},turn:0,round:1};
+ show("arcadePlay");
+ play.innerHTML='<button type="button" class="back-link" id="modeBack">← All games</button><div class="arcHead"><div class="eyebrow">CHOOSE YOUR MODE</div><h1>'+(id==="guess_the_facts"?"Who Said That?":esc(g[2]))+'</h1><p>How do you want to play this round?</p></div><div class="mode-wrap"><div class="mode-card"><h2>🎮 Let’s get the group together</h2><p>Choose a player name, then create a room, join a friend, or play together on one device.</p><label class="muted" for="modeName">Your player name</label><input class="mode-name" id="modeName" maxlength="22" placeholder="Enter your name" autocomplete="off"><div class="mode-actions"><button type="button" class="btn btn-dark" id="modeCreate">＋ Create Room</button><div class="mode-divider">OR JOIN FRIENDS</div><div class="join-row"><input id="modeCode" maxlength="6" placeholder="6-character room code" autocapitalize="characters"><button type="button" class="btn btn-light" id="modeJoin">Join Room ↗</button></div><div class="mode-divider">OR</div><button type="button" class="btn mode-offline" id="modeOffline">📱 Play Offline</button></div></div></div>';
+ document.getElementById("modeBack").onclick=()=>show("arcadeHub");
+ const name=()=>document.getElementById("modeName").value.trim();
+ document.getElementById("modeCreate").onclick=()=>{if(!name())return alert("Enter your name first.");if(id==="guess_the_facts")launchLegacyGuess("create",name(),"");else onlineEntry(id,"create",name());};
+ document.getElementById("modeJoin").onclick=()=>{if(!name())return alert("Enter your name first.");const code=document.getElementById("modeCode").value.trim();if(!code)return alert("Enter the room code.");if(id==="guess_the_facts")launchLegacyGuess("join",name(),code);else onlineEntry(id,"join",name(),code);};
+ document.getElementById("modeOffline").onclick=()=>{if(id==="guess_the_facts")launchLegacyGuess("offline",name(),"");else startSetup(id);};
+}
+
 async function refreshOnline(){
  if(!online||renderingOnline)return;
  try{const snap=await api("snapshot");online.snapshot=snap;online.privateState=snap.privateState||{};online.isHost=snap.isHost;renderOnline();}
@@ -196,7 +278,7 @@ function renderOnline(){
  bindModeration();renderingOnline=false;
 }
 
-hub.querySelectorAll('[data-game]').forEach(b=>b.onclick=()=>{if(b.dataset.game==='guess_the_facts'){let back=document.getElementById('arcadeReturn');if(!back){back=document.createElement('button');back.id='arcadeReturn';back.className='btn btn-light';back.textContent='← All games';document.querySelector('#homeScreen .hero-actions').prepend(back);back.onclick=()=>show('arcadeHub')}show('homeScreen');return}startSetup(b.dataset.game)});
+hub.addEventListener('click',e=>{const b=e.target.closest('[data-game]');if(!b)return;e.preventDefault();openGameMode(b.dataset.game);});
 try{
  const saved=JSON.parse(sessionStorage.getItem("friendArcadeSession")||"null");
  const game=saved&&games.find(g=>g[0]===saved.gameType);
