@@ -45,6 +45,7 @@ async function api(action,extra={}) {
 }
 function onlineButtons(id){const g=games.find(x=>x[0]===id);const card=hub.querySelector('[data-game="'+id+'"]').closest('.card');const b=document.createElement('button');b.className='btn btn-dark';b.textContent='Play online ↗';b.onclick=()=>onlineEntry(id);card.append(b);}
 games.filter(g=>g[0]!=='guess_the_facts').forEach(g=>onlineButtons(g[0]));
+['onlineCreate','offlineCreate'].forEach(id=>document.getElementById(id)?.addEventListener('click',()=>{hub.classList.remove('active');play.classList.remove('active')}));
 async function onlineEntry(id){
  const name=prompt("Your player name?");if(!name?.trim())return;
  const choice=prompt("Type CREATE to host a new room, or JOIN to enter a room code.");
