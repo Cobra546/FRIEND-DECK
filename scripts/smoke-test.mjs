@@ -26,6 +26,9 @@ for (const id of ["modeCreate", "modeJoin", "modeOffline"]) assert.ok(arcade.inc
 assert.match(arcade, /hub\.addEventListener\('click'/, "Game cards must use delegated click handling");
 assert.match(arcade, /Welcome to <em>Friend Deck\.<\/em>/, "Friend Deck landing theme must be present");
 assert.match(arcade, /guess_the_facts[\s\S]*?Guess the Facts/, "The game title must remain Guess the Facts");
+assert.match(arcade, /Math\.random\(\)<\.5/, "Burning Bridges coin must use fair 50/50 odds");
+assert.match(arcade, /coinSpin/, "Burning Bridges must animate the coin toss");
+assert.match(arcade, /Heads and Tails both have an equal 50% chance/, "Offline rules must explain fair coin odds");
 assert.doesNotMatch(arcade, /Who Said That\?/, "Do not rename the Guess the Facts game");
 assert.match(arcade, /deck-chits/, "Landing page should show sample chits");
 assert.match(arcade, /show\('arcadePlay'\);saveOnlineSession\(\)/, "Online room must open the play screen and persist its session");
