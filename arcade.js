@@ -32,5 +32,109 @@ function mafiaVote(){state.votes={};state.turn=0;mafiaVoter()}
 function mafiaVoter(){let s=state,alive=s.players.filter(p=>p.active);if(s.turn>=alive.length){let max=Math.max(0,...Object.values(s.votes)),ids=Object.keys(s.votes).filter(id=>s.votes[id]===max);if(ids.length>1){shell('Voting tie · tied players safe','<div class="box"><p>No one is eliminated.</p><button class="btn btn-dark" id="next">Next round</button></div>');document.getElementById('next').onclick=mafiaCheck;return}let p=s.players.find(x=>x.id===ids[0]);if(p)p.active=false;shell('Voting result','<div class="box"><div class="result">'+esc(p?.name||'Player')+' was voted out. Role stays secret.</div><button class="btn btn-dark" id="next">Continue →</button></div>');document.getElementById('next').onclick=mafiaCheck;return}let p=alive[s.turn];shell('Vote '+(s.turn+1)+'/'+alive.length,'<div class="box"><p class="muted">Pass phone to '+esc(p.name)+'. Vote for one player. You cannot vote yourself.</p>'+options(p.id)+'</div>');choose(id=>{s.votes[id]=(s.votes[id]||0)+1;s.turn++;mafiaVoter()})}
 function mafiaCheck(){let s=state,k=s.players.filter(p=>p.active&&p.role==='Killer').length,o=s.players.filter(p=>p.active).length-k;if(k===0)return mafiaEnd('Civilians');if(k>=o)return mafiaEnd('Killers');s.round++;killerTurn()}
 function mafiaEnd(w){let s=state;clearInterval(s.timer);shell('🏆 '+w+' win!','<div class="box"><div class="result">'+w+' have won the game.</div><h2>All roles revealed</h2>'+s.players.map(p=>'<div class="result">'+esc(p.name)+' · '+p.role+(p.active?'':' · eliminated')+'</div>').join('')+'<button class="btn btn-dark" id="again">Play again</button></div>');document.getElementById('again').onclick=setup}
+
+/* Online multiplayer for the four new games. Secrets are issued by the Edge Function and only returned to each player's session. */
+const API_URL="https://antqqabimhgepykkkmwl.supabase.co/functions/v1/multiplayer-game-api";
+const API_KEY="sb_publishable_w6n4kCXq8cJoyd-8PE0HoQ_YBPYoI_7";
+let online=null,pollHandle=null,renderingOnline=false;
+async function api(action,extra={}) {
+ const body={action,...extra};
+ if(online&&action!=="create_room"&&action!=="join_room"){body.roomId=online.roomId;body.token=online.token;}
+ const res=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json","apikey":API_KEY},body:JSON.stringify(body)});
+ const data=await res.json();if(!res.ok||data.error)throw new Error(data.error||"Online request failed.");return data;
+}
+function onlineButtons(id){const g=games.find(x=>x[0]===id);const card=hub.querySelector('[data-game="'+id+'"]').closest('.card');const b=document.createElement('button');b.className='btn btn-dark';b.textContent='Play online ↗';b.onclick=()=>onlineEntry(id);card.append(b);}
+games.filter(g=>g[0]!=='guess_the_facts').forEach(g=>onlineButtons(g[0]));
+async function onlineEntry(id){
+ const name=prompt("Your player name?");if(!name?.trim())return;
+ const choice=prompt("Type CREATE to host a new room, or JOIN to enter a room code.");
+ if(!choice)return;
+ try{
+  let data;
+  if(choice.trim().toUpperCase()==="CREATE")data=await api("create_room",{name:name.trim(),gameType:id});
+  else if(choice.trim().toUpperCase()==="JOIN"){const code=prompt("Enter the 6-character room code:");if(!code)return;data=await api("join_room",{name:name.trim(),code:code.trim().toUpperCase()});}
+  else return alert("Please type CREATE or JOIN.");
+  online={roomId:data.roomId,token:data.token,playerId:data.playerId,isHost:data.isHost,code:data.code,gameType:id,privateState:data.privateState||{},snapshot:null};
+  state={id,title:games.find(x=>x[0]===id)[2],min:games.find(x=>x[0]===id)[3],max:games.find(x=>x[0]===id)[4]};
+  if(pollHandle)clearInterval(pollHandle);await refreshOnline();pollHandle=setInterval(refreshOnline,1300);
+ }catch(e){alert(e.message);}
+}
+async function refreshOnline(){
+ if(!online||renderingOnline)return;
+ try{const snap=await api("snapshot");online.snapshot=snap;online.privateState=snap.privateState||{};online.isHost=snap.isHost;renderOnline();}
+ catch(e){if(String(e.message).includes("session")||String(e.message).includes("active")){clearInterval(pollHandle);pollHandle=null;online=null;alert("You are no longer in this room.");show("arcadeHub");}else console.warn(e);}
+}
+function onlineModeration(snap){
+ const me=snap.playerId,host=snap.isHost;
+ return '<div class="box"><h3>Room controls</h3><p class="muted">Room code: <b>'+esc(snap.code)+'</b> · Host: '+esc(snap.players.find(p=>p.id===snap.hostPlayerId)?.display_name||snap.players.find(p=>p.id===snap.hostPlayerId)?.name||"Player")+'</p><div class="players">'+snap.players.map(p=>'<div>'+esc(p.display_name||p.name)+' '+(p.id===snap.hostPlayerId?'👑':'')+(host&&p.id!==me?' <button data-kick="'+p.id+'">Kick</button>':'')+(p.id!==me?' <button data-voteout="'+p.id+'">Vote out</button>':'')+'</div>').join('')+'</div><button class="btn btn-light" id="leaveOnline">Leave room</button></div>';
+}
+function bindModeration(){
+ play.querySelectorAll('[data-kick]').forEach(b=>b.onclick=async()=>{if(!confirm("Kick this player?"))return;try{await api("kick",{targetPlayerId:b.dataset.kick});await refreshOnline()}catch(e){alert(e.message)}});
+ play.querySelectorAll('[data-voteout]').forEach(b=>b.onclick=async()=>{try{const r=await api("vote_out",{targetPlayerId:b.dataset.voteout});alert(r.removed?"Player removed by majority vote.":"Vote recorded. Majority is required.");await refreshOnline()}catch(e){alert(e.message)}});
+ const leave=document.getElementById("leaveOnline");if(leave)leave.onclick=async()=>{try{await api("leave_room");}catch{}clearInterval(pollHandle);pollHandle=null;online=null;show("arcadeHub");};
+}
+async function sendOnline(type,payload={}){try{await api("submit_action",{type,payload});await refreshOnline()}catch(e){alert(e.message)}}
+function onlineChoice(players,cb,exclude){return '<div class="choice">'+players.filter(p=>p.active!==false&&p.id!==exclude).map(p=>'<button data-online-choice="'+p.id+'">'+esc(p.name||p.display_name)+'</button>').join('')+'</div>'}
+function bindOnlineChoices(cb){play.querySelectorAll('[data-online-choice]').forEach(b=>b.onclick=()=>cb(b.dataset.onlineChoice))}
+function renderOnline(){
+ if(!online||!online.snapshot)return;
+ renderingOnline=true;
+ const s=online.snapshot,pub=s.publicState||{},priv=s.privateState||{},me=s.playerId,players=pub.players||s.players.map(p=>({id:p.id,name:p.display_name,active:true})),mine=players.find(p=>p.id===me);
+ let body="",title=state.title;
+ if(s.phase==="lobby"){
+  body='<div class="box"><h2>Room '+esc(s.code)+'</h2><p class="muted">'+players.length+' / '+state.max+' players · '+state.min+' minimum. Share the code with friends.</p><div class="players">'+players.map(p=>'<div>'+esc(p.name||p.display_name)+(p.id===s.hostPlayerId?' 👑 Host':'')+'</div>').join('')+'</div>'+(s.isHost?'<label class="muted">Number of Killers</label><select id="onlineKillers">'+Array.from({length:Math.max(1,players.length-2)},(_,i)=>'<option value="'+(i+1)+'" '+((i+1)===(players.length>=7?3:players.length===5?1:2)?'selected':'')+'>'+(i+1)+'</option>').join('')+'</select><button class="btn btn-dark" id="onlineStart" '+(players.length<state.min?'disabled':'')+'>Start game →</button>':'<p class="muted">Waiting for the host to start…</p>')+'</div>'+onlineModeration(s);
+  shell(title,body);const st=document.getElementById("onlineStart");if(st)st.onclick=async()=>{try{await api("start_game",{killerCount:Number(document.getElementById("onlineKillers")?.value||0)});await refreshOnline()}catch(e){alert(e.message)}};
+ }else if(s.phase==="cards"||s.phase==="mafia_cards"){
+  const card=s.phase==="cards"?(priv.role==="IMPOSTER"?"🕵️ IMPOSTER":priv.word||"Loading private card…"):({Killer:"🔴 KILLER",Doctor:"🩺 DOCTOR",Detective:"🕵️ DETECTIVE",Civilian:"👤 CIVILIAN"}[priv.role]||"Loading role…");
+  const readyType=s.phase==="cards"?"imposter_ready":"mafia_ready";
+  body='<div class="box"><p class="muted">Only you can see this private card. Do not show your screen to anyone.</p><div class="secret">'+esc(card)+'</div><button class="btn btn-dark" id="onlineReady">I’m ready — hide card</button></div>'+onlineModeration(s);
+  shell(title,body);document.getElementById("onlineReady").onclick=()=>sendOnline(readyType);
+ }else if(s.phase==="imposter_describe"){
+  const current=pub.order?.[pub.turnIndex],who=players.find(p=>p.id===current);
+  body='<div class="box"><h2>'+esc(who?.name||"Player")+'’s description turn</h2><p class="muted">Describe the secret out loud without saying the word. The Imposter must also describe and try to infer it.</p>'+(current===me?'<button class="btn btn-dark" id="onlineDone">Description done →</button>':'<p>Waiting for the current player…</p>')+'</div>'+onlineModeration(s);
+  shell(title,body);document.getElementById("onlineDone")?.addEventListener("click",()=>sendOnline("imposter_description_done"));
+ }else if(s.phase==="imposter_decision"){
+  body='<div class="box"><h2>Discussion complete</h2><p>Host chooses whether to vote now or have one more description round.</p>'+(s.isHost?'<button class="btn btn-dark" id="voteNow">Vote now</button><button class="btn btn-light" id="moreRound">One more round</button>':'<p class="muted">Waiting for host…</p>')+'</div>'+onlineModeration(s);shell(title,body);
+  document.getElementById("voteNow")?.addEventListener("click",()=>sendOnline("imposter_open_vote"));document.getElementById("moreRound")?.addEventListener("click",()=>sendOnline("imposter_more_round"));
+ }else if(s.phase==="imposter_voting"||s.phase==="imposter_revote"){
+  body='<div class="box"><h2>'+(s.phase==="imposter_revote"?"Revote":"Vote for the Imposter")+'</h2><p class="muted">Choose one active player. Your vote is private.</p>'+onlineChoice(players,()=>{},me)+'</div>'+onlineModeration(s);shell(title,body);bindOnlineChoices(id=>sendOnline("imposter_vote",{targetId:id}));
+ }else if(s.phase==="imposter_done"){
+  body='<div class="box"><div class="secret">Secret: '+esc(pub.secretWord||"—")+'</div><div class="result">'+esc(players.find(p=>p.id===pub.imposterId)?.name||"Imposter")+' was the Imposter.</div><div class="result">'+esc(pub.winner||"")+' win!</div>'+(s.isHost?'<button class="btn btn-dark" id="restartOnline">Play again</button>':'<p class="muted">Waiting for host to restart…</p>')+'</div>'+onlineModeration(s);shell(title,body);document.getElementById("restartOnline")?.addEventListener("click",async()=>{await api("restart_room");await refreshOnline()});
+ }else if(s.phase==="fruit"){
+  const current=pub.order?.[pub.turnIndex],who=players.find(p=>p.id===current),hand=priv.hand||[];
+  body='<div class="box"><h2>'+esc(who?.name||"Player")+'’s turn</h2>'+(current===me?'<p class="muted">Choose one chit to pass face-down to the next player.</p><div class="choice">'+hand.map((f,i)=>'<button data-fruit-index="'+i+'">'+esc(f)+'</button>').join('')+'</div><button class="btn btn-light" id="fruitStopOnline">Stop my attempt & reveal my chits</button>':'<p class="muted">Waiting for '+esc(who?.name||"player")+' to pass one chit or stop.</p>')+'</div>'+onlineModeration(s);
+  shell(title,body);play.querySelectorAll('[data-fruit-index]').forEach(b=>b.onclick=()=>sendOnline("fruit_pass",{index:Number(b.dataset.fruitIndex)}));document.getElementById("fruitStopOnline")?.addEventListener("click",()=>sendOnline("fruit_stop"));
+ }else if(s.phase==="fruit_done"){
+  body='<div class="box"><h2>Collect Fruits finished</h2>'+(pub.winnerId?'<div class="result">'+esc(players.find(p=>p.id===pub.winnerId)?.name||"Player")+' collected a full set and wins!</div>':'<div class="result">No full set was collected.</div>')+(pub.revealedCollections||[]).map(x=>'<p>'+esc(players.find(p=>p.id===x.playerId)?.name||"Player")+': '+esc((x.chits||[]).join(" "))+'</p>').join('')+(s.isHost?'<button class="btn btn-dark" id="restartOnline">Play again</button>':'<p class="muted">Waiting for host…</p>')+'</div>'+onlineModeration(s);shell(title,body);document.getElementById("restartOnline")?.addEventListener("click",async()=>{await api("restart_room");await refreshOnline()});
+ }else if(s.phase==="burn_question"){
+  const current=pub.order?.[pub.turnIndex],who=players.find(p=>p.id===current);
+  body='<div class="box"><h2>'+esc(who?.name||"Player")+'’s turn</h2>'+(current===me?'<p class="muted">Ask a question for the adjacent player. Only that player receives it privately.</p><textarea id="burnQOnline" rows="3" placeholder="Who in this group always…?"></textarea><button class="btn btn-dark" id="burnAskOnline">Send private question →</button>':'<p class="muted">Waiting for the next question…</p>')+'</div>'+onlineModeration(s);shell(title,body);document.getElementById("burnAskOnline")?.addEventListener("click",()=>sendOnline("burn_question",{question:document.getElementById("burnQOnline").value}));
+ }else if(s.phase==="burn_pick"){
+  if(me===pub.targetId)body='<div class="box"><p><b>Private question:</b> '+esc(priv.incomingQuestion||"")+'</p><p class="muted">Choose who the question is about. Heads may reveal your choice; Tails keeps it secret.</p>'+onlineChoice(players,()=>{})+'</div>';
+  else body='<div class="box"><p class="muted">Waiting for the adjacent player to make their private choice…</p></div>';
+  body+=onlineModeration(s);shell(title,body);if(me===pub.targetId)bindOnlineChoices(id=>sendOnline("burn_pick",{chosenId:id}));
+ }else if(s.phase==="burn_reveal"){
+  const reveal=priv.burnReveal;
+  body='<div class="box">'+(reveal?'<div class="secret">'+(reveal.heads?"🪙 HEADS":"🪙 TAILS")+'</div><div class="result">'+(reveal.heads?esc(players.find(p=>p.id===reveal.chosenId)?.name||"Selected player")+" was selected.":"The answer stays secret 🤫")+'</div>'+(reveal.repeated?'<div class="result fire-pop">🔥 The bridge is burning!</div>':''):'<p class="muted">Private result is visible only to the questioner and adjacent player.</p>')+(me===pub.askerId||me===pub.targetId?'<button class="btn btn-dark" id="burnNextOnline">Next turn →</button>':'')+'</div>'+onlineModeration(s);shell(title,body);document.getElementById("burnNextOnline")?.addEventListener("click",()=>sendOnline("burn_next"));
+ }else if(s.phase==="burn_done"){
+  body='<div class="box"><h2>Burning Bridges round complete</h2><p>All players have taken their turns.</p>'+(s.isHost?'<button class="btn btn-dark" id="restartOnline">Play again</button>':'<p class="muted">Waiting for host…</p>')+'</div>'+onlineModeration(s);shell(title,body);document.getElementById("restartOnline")?.addEventListener("click",async()=>{await api("restart_room");await refreshOnline()});
+ }else if(s.phase==="mafia_kill"||s.phase==="mafia_doctor"||s.phase==="mafia_detective"){
+  const role=priv.role,required=s.phase==="mafia_kill"?"Killer":s.phase==="mafia_doctor"?"Doctor":"Detective",action=s.phase==="mafia_kill"?"killer_target":s.phase==="mafia_doctor"?"doctor_save":"detective_guess";
+  const roleMatches=role===required;
+  body='<div class="box"><h2>'+(s.phase==="mafia_kill"?"🌙 Killer turn":s.phase==="mafia_doctor"?"🩺 Doctor turn":"🕵️ Detective turn")+'</h2>'+(roleMatches?'<p class="muted">'+(required==="Killer"?"Choose the person to target.":required==="Doctor"?"Choose one person to save, including yourself.":"Guess who you think is a Killer.")+'</p>'+onlineChoice(players,()=>{}):'<p class="muted">Your role does not act in this phase. Keep your role secret.</p>')+'</div>'+onlineModeration(s);shell(title,body);if(roleMatches)bindOnlineChoices(id=>sendOnline(action,{targetId:id}));
+ }else if(s.phase==="mafia_discussion"){
+  const left=Math.max(0,Math.ceil(((pub.discussionEndsAt||Date.now())-Date.now())/1000));
+  const chat=s.chat||[];
+  body='<div class="box"><h2>💬 Discussion · '+String(Math.floor(left/60)).padStart(2,"0")+':'+String(left%60).padStart(2,"0")+'</h2><p class="muted">Discuss who seems suspicious. Do not reveal your role.</p><div class="arcade-chat">'+chat.map(m=>'<p><b>'+esc(players.find(p=>p.id===m.playerId)?.name||"Player")+'</b>: '+esc(m.text)+'</p>').join('')+'</div><div class="arcade-row"><input id="mafChatInput" maxlength="300" placeholder="Write a message…"><button class="btn btn-light" id="mafChatSend">Send</button></div>'+(s.isHost?'<button class="btn btn-dark" id="endTalk">End discussion & vote</button>':'')+'</div>'+onlineModeration(s);shell(title,body);document.getElementById("mafChatSend")?.addEventListener("click",()=>{const text=document.getElementById("mafChatInput").value.trim();if(text)sendOnline("chat_message",{text})});document.getElementById("endTalk")?.addEventListener("click",()=>sendOnline("mafia_discussion_done"));
+ }else if(s.phase==="mafia_vote"){
+  body='<div class="box"><h2>🗳️ Vote out a player</h2><p class="muted">Choose one active player. Your vote is private.</p>'+onlineChoice(players,()=>{},me)+'</div>'+onlineModeration(s);shell(title,body);bindOnlineChoices(id=>sendOnline("mafia_vote",{targetId:id}));
+ }else if(s.phase==="mafia_done"){
+  body='<div class="box"><div class="secret">🏆 '+esc(pub.winner||"")+' win!</div><h2>All roles revealed</h2>'+players.map(p=>'<div class="result">'+esc(p.name)+' · '+esc(p.role||"Unknown")+(p.active===false?' · eliminated':'')+'</div>').join('')+(s.isHost?'<button class="btn btn-dark" id="restartOnline">Play again</button>':'<p class="muted">Waiting for host to restart…</p>')+'</div>'+onlineModeration(s);shell(title,body);document.getElementById("restartOnline")?.addEventListener("click",async()=>{await api("restart_room");await refreshOnline()});
+ }else{
+  body='<div class="box"><p class="muted">Waiting for the next game phase…</p></div>'+onlineModeration(s);shell(title,body);
+ }
+ bindModeration();renderingOnline=false;
+}
+
 hub.querySelectorAll('[data-game]').forEach(b=>b.onclick=()=>{if(b.dataset.game==='guess_the_facts'){show('homeScreen');return}startSetup(b.dataset.game)});
 })();
