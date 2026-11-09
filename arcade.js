@@ -42,7 +42,7 @@ function openOfflineManage(){
  overlay.append(panel);document.body.append(overlay);
  function close(){overlay.remove()}
  function render(){
-  panel.innerHTML='<h2>Player controls</h2><p class="muted">Host: '+esc(s.players.find(p=>p.id===s.hostId)?.name||"No host")+'. Host can kick immediately; anyone can start a majority vote.</p>'+s.players.map(p=>'<div class="arcade-player"><b>'+esc(p.name)+'</b> '+(p.id===s.hostId?'👑':'')+(p.id!==s.hostId&&s.hostId===s.players.find(x=>x.id===s.hostId)?.id?' <button data-kick-off="'+p.id+'">Kick</button>':'')+(p.id!==active.find(x=>x.id===p.id)?.id?'':'')+' <button data-vote-off="'+p.id+'">Vote out</button></div>').join('')+'<button class="btn btn-light" id="closeManage">Close</button>';
+  panel.innerHTML='<h2>Player controls</h2><p class="muted">Host: '+esc(s.players.find(p=>p.id===s.hostId)?.name||"No host")+'. Pass the phone to the host for an immediate kick. Anyone can start a majority vote.</p>'+s.players.map(p=>'<div class="arcade-player"><b>'+esc(p.name)+'</b> '+(p.id===s.hostId?'👑':'')+(p.id!==s.hostId?' <button data-kick-off="'+p.id+'">Kick</button>':'')+' <button data-vote-off="'+p.id+'">Vote out</button></div>').join('')+'<button class="btn btn-light" id="closeManage">Close</button>';
   panel.querySelector('#closeManage').onclick=close;
   panel.querySelectorAll('[data-kick-off]').forEach(b=>b.onclick=()=>{if(!confirm('Host: kick '+(s.players.find(p=>p.id===b.dataset.kickOff)?.name||'this player')+'?'))return;removeOfflinePlayer(b.dataset.kickOff);close();});
   panel.querySelectorAll('[data-vote-off]').forEach(b=>b.onclick=()=>offlineVote(b.dataset.voteOff));
