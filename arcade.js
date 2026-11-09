@@ -7,8 +7,8 @@ const play=document.createElement('section');play.id='arcadePlay';play.className
 let state=null;
 function show(id){app.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
 function esc(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function shell(title,html){const manage=(online||state?.phase==='setup')?'':'<button class="btn btn-light" id="manageOffline">Players · kick / vote out</button>';play.innerHTML='<button class="back-link" id="arcBack">← All games</button><div class="arcHead"><div class="eyebrow">'+(online?'ONLINE · LIVE ROOM':'OFFLINE · PASS THE PHONE')+'</div><h1>'+title+'</h1></div>'+manage+html;document.getElementById('arcBack').onclick=async()=>{if(online){try{await api('leave_room')}catch{}if(pollHandle)clearInterval(pollHandle);pollHandle=null;online=null;}show('arcadeHub')};document.getElementById('manageOffline')?.addEventListener('click',openOfflineManage)}
-function startSetup(id){const g=games.find(x=>x[0]===id);state={id:id,title:g[2],min:g[3],max:g[4],players:[],history:{},turn:0,round:1};setup()}
+function shell(title,html){const manage=(online||state?.phase==='setup')?'':'<button class="btn btn-light" id="manageOffline">Players · kick / vote out</button>';play.innerHTML='<button class="back-link" id="arcBack">← All games</button><div class="arcHead"><div class="eyebrow">'+(online?'ONLINE · LIVE ROOM':'OFFLINE · PASS THE PHONE')+'</div><h1>'+title+'</h1></div>'+manage+html;document.getElementById('arcBack').onclick=async()=>{if(online){try{await api('leave_room')}catch{}if(pollHandle)clearInterval(pollHandle);pollHandle=null;online=null;clearOnlineSession();}show('arcadeHub')};document.getElementById('manageOffline')?.addEventListener('click',openOfflineManage)}
+function startSetup(id){const g=games.find(x=>x[0]===id);state={id:id,title:g[2],min:g[3],max:g[4],players:[],history:{},turn:0,round:1};show('arcadePlay');setup()}
 function setup(){let s=state;s.phase='setup';shell(s.title,'<div class="box"><h2>Players ('+s.players.length+'/'+s.max+')</h2><p class="muted">Add '+s.min+'–'+s.max+' players. Everyone shares this phone.</p><input id="playerName" maxlength="22" placeholder="Player name"><button class="btn btn-dark" id="addPlayer">Add +</button><div class="players">'+s.players.map((p,i)=>'<div>'+ (i+1)+'. '+esc(p.name)+' <button data-remove="'+p.id+'">Remove</button></div>').join('')+'</div>'+(s.id==='mafia'?'<p class="muted">Number of Killers</p><select id="killerCount">'+Array.from({length:Math.max(1,s.players.length-2)},(_,i)=>'<option value="'+(i+1)+'" '+((i+1)===(s.players.length>=7?3:s.players.length===5?1:2)?'selected':'')+'>'+(i+1)+'</option>').join('')+'</select>':'')+'<button class="btn btn-dark" id="startGame" '+(s.players.length<s.min?'disabled':'')+'>Start game →</button></div>');document.getElementById('addPlayer').onclick=()=>{let n=document.getElementById('playerName').value.trim();if(!n)return;if(s.players.length>=s.max)return alert('Maximum players reached.');if(s.players.some(p=>p.name.toLowerCase()===n.toLowerCase()))return alert('Name already added.');s.players.push({id:crypto.randomUUID(),name:n,active:true});setup()};document.getElementById('playerName').onkeydown=e=>{if(e.key==='Enter')document.getElementById('addPlayer').click()};play.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{s.players=s.players.filter(p=>p.id!==b.dataset.remove);setup()});document.getElementById('startGame').onclick=begin}
 function options(exclude){return '<div class="choice">'+state.players.filter(p=>p.active&&p.id!==exclude).map(p=>'<button data-choice="'+p.id+'">'+esc(p.name)+'</button>').join('')+'</div>'}
 function choose(fn){play.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>fn(b.dataset.choice))}
@@ -92,6 +92,8 @@ function removeOfflinePlayer(id){
 const API_URL="https://antqqabimhgepykkkmwl.supabase.co/functions/v1/multiplayer-game-api";
 const API_KEY="sb_publishable_w6n4kCXq8cJoyd-8PE0HoQ_YBPYoI_7";
 let online=null,pollHandle=null,renderingOnline=false,autoEndedRound=null;
+function saveOnlineSession(){try{if(online)sessionStorage.setItem('friendArcadeSession',JSON.stringify({roomId:online.roomId,token:online.token,playerId:online.playerId,isHost:online.isHost,code:online.code,gameType:online.gameType}));}catch{}}
+function clearOnlineSession(){try{sessionStorage.removeItem('friendArcadeSession')}catch{}}
 async function api(action,extra={}) {
  const body={action,...extra};
  if(online&&action!=="create_room"&&action!=="join_room"){body.roomId=online.roomId;body.token=online.token;}
@@ -112,13 +114,14 @@ async function onlineEntry(id){
   else return alert("Please type CREATE or JOIN.");
   online={roomId:data.roomId,token:data.token,playerId:data.playerId,isHost:data.isHost,code:data.code,gameType:id,privateState:data.privateState||{},snapshot:null};
   state={id,title:games.find(x=>x[0]===id)[2],min:games.find(x=>x[0]===id)[3],max:games.find(x=>x[0]===id)[4]};
+  show('arcadePlay');saveOnlineSession();
   if(pollHandle)clearInterval(pollHandle);await refreshOnline();pollHandle=setInterval(refreshOnline,1300);
  }catch(e){alert(e.message);}
 }
 async function refreshOnline(){
  if(!online||renderingOnline)return;
  try{const snap=await api("snapshot");online.snapshot=snap;online.privateState=snap.privateState||{};online.isHost=snap.isHost;renderOnline();}
- catch(e){if(String(e.message).includes("session")||String(e.message).includes("active")){clearInterval(pollHandle);pollHandle=null;online=null;alert("You are no longer in this room.");show("arcadeHub");}else console.warn(e);}
+ catch(e){if(String(e.message).includes("session")||String(e.message).includes("active")){clearInterval(pollHandle);pollHandle=null;online=null;clearOnlineSession();alert("You are no longer in this room.");show("arcadeHub");}else console.warn(e);}
 }
 function onlineModeration(snap){
  const me=snap.playerId,host=snap.isHost;
@@ -127,7 +130,7 @@ function onlineModeration(snap){
 function bindModeration(){
  play.querySelectorAll('[data-kick]').forEach(b=>b.onclick=async()=>{if(!confirm("Kick this player?"))return;try{await api("kick",{targetPlayerId:b.dataset.kick});await refreshOnline()}catch(e){alert(e.message)}});
  play.querySelectorAll('[data-voteout]').forEach(b=>b.onclick=async()=>{try{const r=await api("vote_out",{targetPlayerId:b.dataset.voteout});alert(r.removed?"Player removed by majority vote.":"Vote recorded. Majority is required.");await refreshOnline()}catch(e){alert(e.message)}});
- const leave=document.getElementById("leaveOnline");if(leave)leave.onclick=async()=>{try{await api("leave_room");}catch{}clearInterval(pollHandle);pollHandle=null;online=null;show("arcadeHub");};
+ const leave=document.getElementById("leaveOnline");if(leave)leave.onclick=async()=>{try{await api("leave_room");}catch{}clearInterval(pollHandle);pollHandle=null;online=null;clearOnlineSession();show("arcadeHub");};
 }
 async function sendOnline(type,payload={}){try{await api("submit_action",{type,payload});await refreshOnline()}catch(e){alert(e.message)}}
 function onlineChoice(players,cb,exclude){return '<div class="choice">'+players.filter(p=>p.active!==false&&p.id!==exclude).map(p=>'<button data-online-choice="'+p.id+'">'+esc(p.name||p.display_name)+'</button>').join('')+'</div>'}
