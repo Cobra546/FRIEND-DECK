@@ -25,6 +25,8 @@ assert.match(arcade, /function openGameMode\(id\)/, "Every game should open its 
 for (const id of ["modeCreate", "modeJoin", "modeOffline"]) assert.ok(arcade.includes(id), "Missing mode option: " + id);
 assert.match(arcade, /hub\.addEventListener\('click'/, "Game cards must use delegated click handling");
 assert.match(arcade, /Welcome to <em>Friend Deck\.<\/em>/, "Friend Deck landing theme must be present");
+assert.match(arcade, /guess_the_facts[\s\S]*?Guess the Facts/, "The game title must remain Guess the Facts");
+assert.doesNotMatch(arcade, /Who Said That\?/, "Do not rename the Guess the Facts game");
 assert.match(arcade, /deck-chits/, "Landing page should show sample chits");
 assert.match(arcade, /show\('arcadePlay'\);saveOnlineSession\(\)/, "Online room must open the play screen and persist its session");
 assert.match(arcade, /friendArcadeSession/, "Online sessions should recover after refresh");
