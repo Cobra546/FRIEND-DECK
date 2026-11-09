@@ -197,4 +197,14 @@ function renderOnline(){
 }
 
 hub.querySelectorAll('[data-game]').forEach(b=>b.onclick=()=>{if(b.dataset.game==='guess_the_facts'){let back=document.getElementById('arcadeReturn');if(!back){back=document.createElement('button');back.id='arcadeReturn';back.className='btn btn-light';back.textContent='← All games';document.querySelector('#homeScreen .hero-actions').prepend(back);back.onclick=()=>show('arcadeHub')}show('homeScreen');return}startSetup(b.dataset.game)});
+try{
+ const saved=JSON.parse(sessionStorage.getItem("friendArcadeSession")||"null");
+ const game=saved&&games.find(g=>g[0]===saved.gameType);
+ if(saved&&saved.roomId&&saved.token&&game){
+  online={...saved,snapshot:null,privateState:{}};
+  state={id:game[0],title:game[2],min:game[3],max:game[4]};
+  show("arcadePlay");
+  refreshOnline().then(()=>{if(online&&!pollHandle)pollHandle=setInterval(refreshOnline,1300);});
+ }
+}catch{clearOnlineSession();}
 })();
