@@ -31,6 +31,7 @@ jobs:
         run: |
           node --check app.js
           node --check arcade.js
+          node --check profiles.js
           node scripts/smoke-test.mjs
       - name: Configure Pages
         uses: actions/configure-pages@v5
