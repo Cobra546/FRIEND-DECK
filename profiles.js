@@ -13,7 +13,7 @@
   async function db(){if(client)return client;const {createClient}=await import("https://esm.sh/@supabase/supabase-js@2");client=createClient(URL,KEY);return client}
   function ensureGuest(){
     let p=getGuest();
-    if(!p){p={id:crypto.randomUUID(),username:"Guest Player",avatar:"🎴",...blankStats()};saveGuest(p)}
+    if(!p){p={id:crypto.randomUUID(),username:"Player"+String(Math.floor(1000+Math.random()*9000)),avatar:"🎴",...blankStats()};saveGuest(p)}
     return p;
   }
   function badgeList(stats){
@@ -81,8 +81,13 @@
     try{
       const c=await db(),{data,error}=await c.auth.signInWithPassword({email,password});if(error)throw error;
       const {data:profile,error:readError}=await c.from("friend_deck_profiles").select("*").eq("user_id",data.user.id).maybeSingle();if(readError)throw readError;
-      if(!profile)throw new Error("No Friend Deck profile found for this account.");
-      current=profile;mode="portable";render();
+      if(!profile){
+        const guest=ensureGuest();
+        const {data:created,error:createError}=await c.from("friend_deck_profiles").insert({user_id:data.user.id,username:guest.username,avatar:guest.avatar,games_played:guest.games_played||0,wins:guest.wins||0,losses:guest.losses||0,points:guest.points||0,achievements:badgeList(guest)}).select("*").single();
+        if(createError)throw createError;
+        current=created;
+      }else current=profile;
+      mode="portable";render();
     }catch(e){alert(e.message||"Could not sign in.");}
   }
   async function signOut(){try{const c=await db();await c.auth.signOut()}catch{}current=ensureGuest();mode="guest";render()}
