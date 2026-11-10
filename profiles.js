@@ -44,14 +44,14 @@
     const p=current||ensureGuest();
     host.innerHTML='<div class="fd-profile-head"><div class="fd-avatar">'+safe(p.avatar||"🎴")+'</div><div><strong>'+safe(p.username||"Guest Player")+'</strong><small>'+(mode==="guest"?"Guest profile · This device only":"Portable profile · Synced account")+'</small><small class="fd-player-id">Friend Deck ID: FD-'+safe(String(p.user_id||p.id||"").replaceAll("-","").slice(0,8).toUpperCase())+'</small></div></div>'+
       statsMarkup(p)+'<h3>Achievements</h3><div class="fd-achievements">'+(badgeList(p).length?badgeList(p).map(x=>'<span>'+safe(x)+'</span>').join(""):'<small>Play a game to unlock your first badge.</small>')+'</div>'+
-      (mode==="guest"?'<div class="fd-form"><label>Display name</label><input id="fdGuestName" maxlength="22" value="'+safe(p.username)+'" placeholder="Your player name"><label>Choose an avatar</label><div class="fd-avatars">'+AVATARS.map(x=>'<button type="button" data-avatar="'+x+'" class="'+(x===p.avatar?"selected":"")+'">'+x+'</button>').join("")+'</div><button class="btn btn-dark" id="fdSaveGuest">Save guest profile</button></div><div class="fd-divider">OR SYNC YOUR PROFILE</div><div class="fd-form"><label>Email</label><input id="fdEmail" type="email" autocomplete="email" placeholder="you@example.com"><label>Password</label><input id="fdPassword" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters"><button class="btn btn-dark" id="fdSignUp">Create portable profile</button><button class="btn btn-light" id="fdSignIn">Sign in to existing profile</button></div>':
+      (mode==="guest"?'<div class="fd-form"><label>Display name</label><input id="fdGuestName" maxlength="22" value="'+safe(p.username)+'" placeholder="Your player name"><label>Choose an avatar</label><div class="fd-avatars">'+AVATARS.map(x=>'<button type="button" data-avatar="'+x+'" class="'+(x===p.avatar?"selected":"")+'">'+x+'</button>').join("")+'</div><button class="btn btn-dark" id="fdSaveGuest">Save guest profile</button></div><div class="fd-divider">OR SYNC YOUR PROFILE</div><div class="fd-form"><label>Email</label><input id="fdEmail" type="email" autocomplete="email" placeholder="you@example.com"><label>Password</label><div class="fd-password-wrap"><input id="fdPassword" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters"><button type="button" class="fd-password-toggle" id="fdPasswordToggle" aria-label="Show password" aria-pressed="false">👁️ Show</button></div><button class="btn btn-dark" id="fdSignUp">Create portable profile</button><button class="btn btn-light" id="fdSignIn">Sign in to existing profile</button><button class="btn btn-light" id="fdResendConfirm">Resend confirmation email</button></div>':
       '<div class="fd-form"><label>Display name</label><input id="fdGuestName" maxlength="22" value="'+safe(p.username)+'"><label>Choose an avatar</label><div class="fd-avatars">'+AVATARS.map(x=>'<button type="button" data-avatar="'+x+'" class="'+(x===p.avatar?"selected":"")+'">'+x+'</button>').join("")+'</div><button class="btn btn-dark" id="fdSavePortable">Save profile</button><button class="btn btn-light" id="fdSignOut">Sign out</button></div>')+
       '<div class="fd-leaderboard"><h3>🏆 Global leaderboard</h3><div id="fdLeaderboard"><small>Loading leaderboard…</small></div></div><p class="fd-note">Guest stats stay on this device. Sign up to sync your profile across devices.</p>';
     host.querySelectorAll("[data-avatar]").forEach(b=>b.onclick=()=>{host.querySelectorAll("[data-avatar]").forEach(x=>x.classList.remove("selected"));b.classList.add("selected");});
     $("fdSaveGuest")?.addEventListener("click",()=>{const name=$("fdGuestName").value.trim();if(name.length<2)return alert("Use a name with at least 2 characters.");p.username=name;p.avatar=host.querySelector("[data-avatar].selected")?.dataset.avatar||p.avatar;saveGuest(p);current=p;render();});
     $("fdSavePortable")?.addEventListener("click",savePortable);
     $("fdSignUp")?.addEventListener("click",signUp);
-    $("fdSignIn")?.addEventListener("click",signIn);
+    $("fdSignIn")?.addEventListener("click",signIn);\n    $("fdResendConfirm")?.addEventListener("click",resendConfirmation);\n    $("fdPasswordToggle")?.addEventListener("click",()=>{const input=$("fdPassword"),btn=$("fdPasswordToggle"),show=input.type==="password";input.type=show?"text":"password";btn.textContent=show?"🙈 Hide":"👁️ Show";btn.setAttribute("aria-label",show?"Hide password":"Show password");btn.setAttribute("aria-pressed",String(show));});
     $("fdSignOut")?.addEventListener("click",signOut);
     loadLeaderboard();
   }
@@ -66,14 +66,23 @@
     const email=$("fdEmail").value.trim(),password=$("fdPassword").value;
     if(!email||password.length<8)return alert("Enter a valid email and a password of at least 8 characters.");
     try{
-      const c=await db(),guest=ensureGuest(),{data,error}=await c.auth.signUp({email,password});
+      const c=await db(),guest=ensureGuest(),{data,error}=await c.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+window.location.pathname}});
       if(error)throw error;
-      if(!data.session){alert("Check your email to confirm the account, then sign in here to finish syncing.");return;}
+      if(!data.session){alert("Confirmation email sent. Open the newest email link; it should return to Friend Deck.");return;}
       const user=data.user;
       const {error:saveError}=await c.from("friend_deck_profiles").upsert({user_id:user.id,username:guest.username,avatar:guest.avatar,games_played:guest.games_played||0,wins:guest.wins||0,losses:guest.losses||0,points:guest.points||0,achievements:badgeList(guest)},{onConflict:"user_id"});
       if(saveError)throw saveError;
       current={...guest};mode="portable";render();
     }catch(e){alert(e.message||"Could not create the profile.");}
+  }
+  async function resendConfirmation(){
+    const email=$("fdEmail").value.trim();
+    if(!email)return alert("Enter your email first.");
+    try{
+      const c=await db(),{error}=await c.auth.resend({type:"signup",email,options:{emailRedirectTo:window.location.origin+window.location.pathname}});
+      if(error)throw error;
+      alert("A fresh confirmation email has been sent. Open the newest email and check Spam if needed.");
+    }catch(e){alert(e.message||"Could not resend confirmation email.");}
   }
   async function signIn(){
     const email=$("fdEmail").value.trim(),password=$("fdPassword").value;
@@ -107,6 +116,17 @@
     getProfile:()=>current||ensureGuest()
   };
   window.addEventListener("DOMContentLoaded",()=>{
+    (async()=>{
+      const params=new URLSearchParams(window.location.search),tokenHash=params.get("token_hash"),type=params.get("type");
+      if(tokenHash&&type==="email"){
+        try{
+          const c=await db(),{error}=await c.auth.verifyOtp({token_hash:tokenHash,type:"email"});
+          if(error)throw error;
+          window.history.replaceState({},document.title,window.location.pathname);
+          alert("Email confirmed! You can now sign in to your Portable Profile.");
+        }catch(e){alert("Email confirmation could not be completed: "+(e.message||"Please request a fresh confirmation email."));}
+      }
+    })();
     const actions=document.querySelector(".top-actions");
     if(actions&&!$("profileButton")){const b=document.createElement("button");b.id="profileButton";b.className="icon-btn fd-profile-trigger";b.textContent="👤";b.setAttribute("aria-label","Open Friend Deck profile");b.onclick=open;actions.insertBefore(b,actions.firstChild);}
     current=ensureGuest();
