@@ -38,15 +38,17 @@
 #arcadePlay .arcHead h1{animation:fdTitleEnter .42s ease-out both}
 #arcadePlay .box,#arcadePlay .mode-card{animation:fdCardEnter .32s ease-out both}
 #arcadePlay .choice button,#arcadePlay .players>div{animation:fdCardEnter .28s ease-out both}
-#arcadePlay .game-burning_bridges .coin.is-flipping{animation:fdCoinSpin 1.1s cubic-bezier(.2,.75,.25,1) infinite}
-#arcadePlay .game-burning_bridges .burn-player-card{animation:fdCardEnter .4s ease-out both}
-#arcadePlay .game-collect_fruits .fruit-chit-face{animation:fdChitFlip .38s ease-out}
-#arcadePlay .game-collect_fruits .fruit-chit{transition:transform .18s,box-shadow .18s}
-#arcadePlay .game-collect_fruits .fruit-chit:active{transform:scale(.96) rotate(-2deg)}
-#arcadePlay .game-imposter .private-card-secret,#arcadePlay .game-mafia .private-card-secret{animation:fdSecretReveal .35s ease-out}
-#arcadePlay .game-imposter .private-flip-card.is-revealed,#arcadePlay .game-mafia .private-flip-card.is-revealed{animation:fdVotePulse .8s ease-in-out}
-#arcadePlay .game-mafia .arcade-chat{animation:fdCardEnter .35s ease-out}
-#arcadePlay .game-guess_the_facts .active-note{animation:fdCardEnter .4s ease-out}
+#arcadePlay.game-burning_bridges .coin.is-flipping{animation:fdCoinSpin 1.1s cubic-bezier(.2,.75,.25,1) infinite}
+#arcadePlay.game-burning_bridges .burn-player-card{animation:fdCardEnter .4s ease-out both}
+#arcadePlay.game-collect_fruits .fruit-chit-face{animation:fdChitFlip .38s ease-out}
+#arcadePlay.game-collect_fruits .fruit-chit{transition:transform .18s,box-shadow .18s}
+#arcadePlay.game-collect_fruits .fruit-chit:active{transform:scale(.96) rotate(-2deg)}
+#arcadePlay.game-imposter .private-card-secret,#arcadePlay.game-mafia .private-card-secret{animation:fdSecretReveal .35s ease-out}
+#arcadePlay.game-imposter .private-flip-card.is-revealed,#arcadePlay.game-mafia .private-flip-card.is-revealed{animation:fdVotePulse .8s ease-in-out}
+#arcadePlay.game-mafia .arcade-chat{animation:fdCardEnter .35s ease-out}
+#arcadePlay.game-guess_the_facts .active-note{animation:fdCardEnter .4s ease-out}
 #arcadePlay button{transition:transform .16s ease,box-shadow .16s ease}
 #arcadePlay button:active{transform:scale(.975)}
 @media(prefers-reduced-motion:reduce){#arcadePlay *,#arcadePlay *:before,#arcadePlay *:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+.fd-player-id{display:block;font-size:10px;color:#95899b;margin-top:5px;letter-spacing:.5px}
