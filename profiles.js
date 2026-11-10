@@ -98,8 +98,9 @@
     }catch(e){el.innerHTML='<small>Leaderboard is temporarily unavailable.</small>'}
   }
   window.FriendDeckStats={
-    async recordGame({won=false,points=0}={}){
-      const p=current||ensureGuest();p.games_played=(p.games_played||0)+1;p.wins=(p.wins||0)+(won?1:0);p.losses=(p.losses||0)+(won?0:1);p.points=(p.points||0)+Math.max(0,Number(points)||0);p.achievements=badgeList(p);
+    async recordGame({gameKey,won=false,points=0}={}){
+      const p=current||ensureGuest();
+      if(gameKey){const key="frienddeck_recorded_"+(mode==="portable"?(p.user_id||"account"):"guest")+"_"+gameKey;if(localStorage.getItem(key))return;localStorage.setItem(key,"1");}p.games_played=(p.games_played||0)+1;p.wins=(p.wins||0)+(won?1:0);p.losses=(p.losses||0)+(won?0:1);p.points=(p.points||0)+Math.max(0,Number(points)||0);p.achievements=badgeList(p);
       if(mode==="guest"){saveGuest(p);current=p;return;}
       try{const c=await db(),{data:{user}}=await c.auth.getUser();if(user){const {error}=await c.from("friend_deck_profiles").update({games_played:p.games_played,wins:p.wins,losses:p.losses,points:p.points,achievements:p.achievements}).eq("user_id",user.id);if(error)throw error;}current=p;}catch(e){console.warn("Could not sync Friend Deck stats",e);}
     },
