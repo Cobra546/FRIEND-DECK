@@ -34,6 +34,19 @@ function playSound(kind="tap"){
     oscillator.connect(gain);gain.connect(audioContext.destination);oscillator.start();oscillator.stop(audioContext.currentTime+duration+0.02);
   }catch{}
 }
+window.FriendDeckPlayArcadeSound = (game, phase) => {
+  if(!soundOn)return;
+  try{
+    const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+    audioContext=audioContext||new C();if(audioContext.state==="suspended")audioContext.resume();
+    const base={burning_bridges:390,collect_fruits:620,imposter:510,mafia:280,guess_the_facts:740}[game]||520;
+    const offset={burn_question:0,burn_pick:80,burn_reveal:180,fruit:120,imposter_cards:-70,imposter_describe:60,imposter_vote:-130,mafia_cards:-90,mafia_kill:-40,mafia_doctor:130,mafia_detective:220,mafia_vote:-110}[phase]||0;
+    const osc=audioContext.createOscillator(),gain=audioContext.createGain();
+    osc.type=game==="mafia"?"triangle":"sine";osc.frequency.setValueAtTime(Math.max(110,base+offset),audioContext.currentTime);
+    gain.gain.setValueAtTime(.0001,audioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.075,audioContext.currentTime+.012);gain.gain.exponentialRampToValueAtTime(.0001,audioContext.currentTime+.11);
+    osc.connect(gain);gain.connect(audioContext.destination);osc.start();osc.stop(audioContext.currentTime+.13);
+  }catch{}
+};
 
 const uid = () => crypto.randomUUID();
 const shuffle = (arr) => { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
