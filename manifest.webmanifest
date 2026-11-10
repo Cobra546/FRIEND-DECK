@@ -1,0 +1,27 @@
+{
+  "id": "./",
+  "name": "Friend Deck — Party Games",
+  "short_name": "Friend Deck",
+  "description": "Five party games for friends. Play online or offline.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff8e9",
+  "theme_color": "#fff8e9",
+  "categories": ["games", "social"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
