@@ -103,7 +103,7 @@ function recordOfflineEnd(gameKey,winnerIds=[]){
 }
 function recordOnlineEnd(s,pub,priv,me){
  if(!window.FriendDeckStats||!["imposter_done","mafia_done","fruit_done","burn_done"].includes(s.phase))return;
- const key="online-"+s.roomId+"-"+s.phase;
+ const key="online-"+s.roomId+"-"+(pub.gameSessionId||"session")+"-"+s.phase;
  let won=false;
  if(s.phase==="fruit_done")won=pub.winnerId===me;
  if(s.phase==="imposter_done"){const imp=priv.role==="IMPOSTER";const impWins=String(pub.winner||"").toLowerCase().includes("imposter");won=imp?impWins:!impWins;}
