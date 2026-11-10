@@ -51,7 +51,8 @@
     $("fdSaveGuest")?.addEventListener("click",()=>{const name=$("fdGuestName").value.trim();if(name.length<2)return alert("Use a name with at least 2 characters.");p.username=name;p.avatar=host.querySelector("[data-avatar].selected")?.dataset.avatar||p.avatar;saveGuest(p);current=p;render();});
     $("fdSavePortable")?.addEventListener("click",savePortable);
     $("fdSignUp")?.addEventListener("click",signUp);
-    $("fdSignIn")?.addEventListener("click",signIn);\n    $("fdResendConfirm")?.addEventListener("click",resendConfirmation);
+    $("fdSignIn")?.addEventListener("click",signIn);
+    $("fdResendConfirm")?.addEventListener("click",resendConfirmation);
     $("fdPasswordToggle")?.addEventListener("click",()=>{const input=$("fdPassword"),btn=$("fdPasswordToggle"),show=input.type==="password";input.type=show?"text":"password";btn.textContent=show?"🙈 Hide":"👁️ Show";btn.setAttribute("aria-label",show?"Hide password":"Show password");btn.setAttribute("aria-pressed",String(show));});
     $("fdSignOut")?.addEventListener("click",signOut);
     loadLeaderboard();
