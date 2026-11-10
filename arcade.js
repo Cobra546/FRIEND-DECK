@@ -259,7 +259,8 @@ function renderOnline(){
  if(!online||!online.snapshot)return;
  if(online.snapshot.phase==='lobby')autoEndedRound=null;
  renderingOnline=true;
- const s=online.snapshot,pub=s.publicState||{},priv=s.privateState||{},me=s.playerId,players=pub.players||s.players.map(p=>({id:p.id,name:p.display_name,active:true})),mine=players.find(p=>p.id===me);\n recordOnlineEnd(s,pub,priv,me);
+ const s=online.snapshot,pub=s.publicState||{},priv=s.privateState||{},me=s.playerId,players=pub.players||s.players.map(p=>({id:p.id,name:p.display_name,active:true})),mine=players.find(p=>p.id===me);
+ recordOnlineEnd(s,pub,priv,me);
  let body="",title=state.title;
  if(s.phase==="lobby"){
   body='<div class="box"><h2>Room '+esc(s.code)+'</h2><p class="muted">'+players.length+' / '+state.max+' players · '+state.min+' minimum. Share the code with friends.</p><div class="players">'+players.map(p=>'<div>'+esc(p.name||p.display_name)+(p.id===s.hostPlayerId?' 👑 Host':'')+'</div>').join('')+'</div>'+(s.isHost?'<label class="muted">Number of Killers</label><select id="onlineKillers">'+Array.from({length:maxKillers(players.length)},(_,i)=>'<option value="'+(i+1)+'" '+((i+1)===(players.length>=7?3:players.length===5?1:2)?'selected':'')+'>'+(i+1)+'</option>').join('')+'</select><button class="btn btn-dark" id="onlineStart" '+(players.length<state.min?'disabled':'')+'>Start game →</button>':'<p class="muted">Waiting for the host to start…</p>')+'</div>'+onlineModeration(s);
