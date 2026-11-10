@@ -317,6 +317,7 @@ function renderOnline(){
  bindModeration();renderingOnline=false;
 }
 
+play.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!window.FriendDeckPlayArcadeSound)return;window.FriendDeckPlayArcadeSound(state?.id,state?.phase);});
 hub.addEventListener('click',e=>{const b=e.target.closest('[data-game]');if(!b)return;e.preventDefault();openGameMode(b.dataset.game);});
 try{
  const saved=JSON.parse(sessionStorage.getItem("friendArcadeSession")||"null");
