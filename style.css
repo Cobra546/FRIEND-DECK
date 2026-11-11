@@ -57,3 +57,9 @@
 .fd-password-wrap input{padding-right:92px!important}
 .fd-password-toggle{position:absolute;right:7px;top:50%;transform:translateY(-50%);border:0;border-radius:9px;background:#f2eafa;color:#69458e;padding:7px 9px;font-size:11px;font-weight:800;cursor:pointer}
 .fd-password-toggle:active{transform:translateY(-50%) scale(.97)}
+
+/* Legacy account migration is tucked away from normal username login. */
+.fd-legacy{margin-top:13px;border:1px solid #eadff0;border-radius:13px;padding:11px 13px;background:#fff}
+.fd-legacy summary{cursor:pointer;font-size:12px;font-weight:800;color:#76539a}
+.fd-legacy p{font-size:11px;color:#817986;line-height:1.5}
+.fd-legacy .fd-form{margin-top:10px}
