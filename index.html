@@ -7,7 +7,7 @@
   <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icon.svg" type="image/svg+xml">
   <title>Friend Deck — Party Games ✦</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=frienddeck-username-auth-20261111a">
+  <link rel="stylesheet" href="style.css?v=frienddeck-pwa-install-20261111b">
 </head>
 <body>
   <div class="paper-grain"></div>
@@ -40,11 +40,35 @@
     </section>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
   </main>
-  <script src="arcade.js?v=frienddeck-username-auth-20261111a"></script>
-  <script type="module" src="app.js?v=frienddeck-username-auth-20261111a"></script>
-  <script type="module" src="profiles.js?v=frienddeck-username-auth-20261111a"></script>
+  <script src="arcade.js?v=frienddeck-pwa-install-20261111b"></script>
+  <script type="module" src="app.js?v=frienddeck-pwa-install-20261111b"></script>
+  <script type="module" src="profiles.js?v=frienddeck-pwa-install-20261111b"></script>
   <script>
-    if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+
+    let deferredInstallPrompt = null;
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      deferredInstallPrompt = event;
+      if (document.getElementById("pwaInstallButton")) return;
+      const button = document.createElement("button");
+      button.id = "pwaInstallButton";
+      button.className = "btn btn-light";
+      button.textContent = "Install App";
+      button.style.cssText = "font-size:11px;padding:8px 11px;white-space:nowrap";
+      button.addEventListener("click", async () => {
+        if (!deferredInstallPrompt) return;
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        button.remove();
+      });
+      document.querySelector(".top-actions")?.append(button);
+    });
+    window.addEventListener("appinstalled", () => {
+      document.getElementById("pwaInstallButton")?.remove();
+      deferredInstallPrompt = null;
+    });
+\n    if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("./sw.js").catch((error) => console.warn("Friend Deck offline setup unavailable:", error));
       });
