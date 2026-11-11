@@ -1,13 +1,13 @@
-const CACHE_NAME = "friend-deck-pwa-v1";
+const CACHE_NAME = "friend-deck-pwa-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icon.svg",
-  "./style.css?v=frienddeck-password-confirm-20261110b",
-  "./arcade.js?v=frienddeck-password-confirm-20261110b",
-  "./app.js?v=frienddeck-password-confirm-20261110b",
-  "./profiles.js?v=frienddeck-password-confirm-20261110b"
+  "./style.css?v=frienddeck-username-auth-20261111a",
+  "./arcade.js?v=frienddeck-username-auth-20261111a",
+  "./app.js?v=frienddeck-username-auth-20261111a",
+  "./profiles.js?v=frienddeck-username-auth-20261111a"
 ];
 
 self.addEventListener("install", (event) => {
