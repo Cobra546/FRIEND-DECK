@@ -17,6 +17,54 @@ const palette = ["#ffe88a","#ffb8c8","#a9d9f4","#bce8c8","#d8c7fa","#ffc58e"];
 let mode = "offline", roomId = null, roomCode = "", isHost = false, myPlayerId = null, hostToken = null;
 let state = { players: [], facts: [], factOrder: [], turnOrder: [], currentFact: 0, currentTurn: 0, phase: "setup", results: [], submitted: [] };
 let channel = null, busy = false, soundOn = true, audioContext = null;
+let musicTimer = null, musicStep = 0;
+const musicChords = [
+  [261.63,329.63,392.00,493.88],
+  [220.00,261.63,329.63,392.00],
+  [174.61,220.00,261.63,329.63],
+  [196.00,246.94,293.66,392.00]
+];
+const musicMelody = [523.25,659.25,587.33,783.99,659.25,587.33,493.88,587.33,523.25,659.25,783.99,659.25,587.33,523.25,493.88,587.33];
+function startBackgroundMusic(){
+  if(!soundOn || musicTimer!==null)return;
+  try{
+    const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+    audioContext=audioContext||new C();
+    if(audioContext.state==="suspended")audioContext.resume();
+    musicStep=0;
+    const tick=()=>{
+      if(!soundOn){stopBackgroundMusic();return;}
+      const now=audioContext.currentTime, step=musicStep%32, bar=Math.floor(step/8), beat=step%8;
+      if(beat===0){
+        const chord=musicChords[bar%4];
+        chord.forEach((freq,i)=>{
+          const osc=audioContext.createOscillator(),gain=audioContext.createGain();
+          osc.type="sine";osc.frequency.setValueAtTime(freq,now);
+          gain.gain.setValueAtTime(.0001,now);gain.gain.linearRampToValueAtTime(i===0?.018:.009,now+.18);gain.gain.exponentialRampToValueAtTime(.0001,now+2.25);
+          osc.connect(gain);gain.connect(audioContext.destination);osc.start(now);osc.stop(now+2.3);
+        });
+      }
+      if(beat%2===0){
+        const bass=audioContext.createOscillator(),bg=audioContext.createGain();
+        bass.type="triangle";bass.frequency.setValueAtTime(musicChords[bar%4][0]/2,now);
+        bg.gain.setValueAtTime(.0001,now);bg.gain.linearRampToValueAtTime(.035,now+.025);bg.gain.exponentialRampToValueAtTime(.0001,now+.24);
+        bass.connect(bg);bg.connect(audioContext.destination);bass.start(now);bass.stop(now+.26);
+      }
+      if(beat===1||beat===3||beat===5||beat===7){
+        const note=musicMelody[(bar*4+Math.floor(beat/2))%musicMelody.length];
+        const osc=audioContext.createOscillator(),mg=audioContext.createGain();
+        osc.type="sine";osc.frequency.setValueAtTime(note,now);
+        mg.gain.setValueAtTime(.0001,now);mg.gain.linearRampToValueAtTime(.022,now+.018);mg.gain.exponentialRampToValueAtTime(.0001,now+.22);
+        osc.connect(mg);mg.connect(audioContext.destination);osc.start(now);osc.stop(now+.24);
+      }
+      musicStep++;
+    };
+    tick();musicTimer=window.setInterval(tick,300);
+  }catch{}
+}
+function stopBackgroundMusic(){
+  if(musicTimer!==null){clearInterval(musicTimer);musicTimer=null;}
+}
 function playSound(kind="tap"){
   if(!soundOn)return;
   try{
@@ -84,7 +132,9 @@ function renderResults(){const ranked=sortedPlayers(),slots=[ranked[1],ranked[0]
 $("playAgainBtn").onclick=async()=>{if(mode==="online"&&!isHost)return toast("Only the host can restart the room.");state.gameId=uid();state.players.forEach(p=>{p.score=0;p.submitted=false;p.facts=[];});state.facts=[];state.factOrder=[];state.turnOrder=[];state.currentFact=0;state.currentTurn=0;state.results=[];state.submitted=[];state.phase="setup";state.factWriter=0;const continueBtn=$("continueSetup");continueBtn.textContent="Continue to facts →";if(mode==="online"){await syncRoom();}renderPlayers();$("setupHint").textContent="Same players, fresh round! Everyone can add five new facts.";showScreen("setupScreen");};
 $("homeBtn").onclick=()=>{if(channel&&supabase)supabase.removeChannel(channel);showScreen("homeScreen");};
 document.querySelectorAll("[data-back]").forEach(b=>b.onclick=()=>{if(mode==="online"&&roomId){toast("You’re in a room. Continue setup or return home.");return;}showScreen("setupScreen");});
-$("soundToggle").onclick=()=>{soundOn=!soundOn;$("soundToggle").textContent=soundOn?"♫":"♪";$("soundToggle").setAttribute("aria-label",soundOn?"Mute sound effects":"Enable sound effects");if(soundOn)playSound("tap");toast(soundOn?"Sound effects enabled":"Sound effects muted");};
+$("soundToggle").onclick=()=>{soundOn=!soundOn;$("soundToggle").textContent=soundOn?"♫":"♪";$("soundToggle").setAttribute("aria-label",soundOn?"Turn music and sound effects off":"Turn music and sound effects on");if(soundOn){startBackgroundMusic();playSound("tap");}else{stopBackgroundMusic();}toast(soundOn?"Music and sound effects on":"Music and sound effects off");};
+document.addEventListener("pointerdown",()=>{if(soundOn)startBackgroundMusic();},{once:true});
+document.addEventListener("keydown",()=>{if(soundOn)startBackgroundMusic();},{once:true});
 $("onlineCreate").addEventListener("contextmenu",e=>e.preventDefault());
 // A joining player can use the room code from the home screen.
 const joinBtn=document.createElement("button");joinBtn.className="btn btn-light";joinBtn.id="onlineJoin";joinBtn.textContent="Join a room";$("homeScreen").querySelector(".hero-actions").append(joinBtn);joinBtn.onclick=joinOnlineRoom;
