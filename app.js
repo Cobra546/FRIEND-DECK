@@ -25,45 +25,18 @@ const musicChords = [
   [196.00,246.94,293.66,392.00]
 ];
 const musicMelody = [523.25,659.25,587.33,783.99,659.25,587.33,493.88,587.33,523.25,659.25,783.99,659.25,587.33,523.25,493.88,587.33];
+const bgMusic = new Audio("https://raw.githubusercontent.com/Cobra546/GUESS-THE-FACTS/main/Friend%20Deck%20%E2%80%93%20Game%20Night.mp3");
+bgMusic.loop = true;
+bgMusic.preload = "auto";
+bgMusic.volume = 0.38;
 function startBackgroundMusic(){
-  if(!soundOn || musicTimer!==null)return;
-  try{
-    const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
-    audioContext=audioContext||new C();
-    if(audioContext.state==="suspended")audioContext.resume();
-    musicStep=0;
-    const tick=()=>{
-      if(!soundOn){stopBackgroundMusic();return;}
-      const now=audioContext.currentTime, step=musicStep%32, bar=Math.floor(step/8), beat=step%8;
-      if(beat===0){
-        const chord=musicChords[bar%4];
-        chord.forEach((freq,i)=>{
-          const osc=audioContext.createOscillator(),gain=audioContext.createGain();
-          osc.type="sine";osc.frequency.setValueAtTime(freq,now);
-          gain.gain.setValueAtTime(.0001,now);gain.gain.linearRampToValueAtTime(i===0?.018:.009,now+.18);gain.gain.exponentialRampToValueAtTime(.0001,now+2.25);
-          osc.connect(gain);gain.connect(audioContext.destination);osc.start(now);osc.stop(now+2.3);
-        });
-      }
-      if(beat%2===0){
-        const bass=audioContext.createOscillator(),bg=audioContext.createGain();
-        bass.type="triangle";bass.frequency.setValueAtTime(musicChords[bar%4][0]/2,now);
-        bg.gain.setValueAtTime(.0001,now);bg.gain.linearRampToValueAtTime(.035,now+.025);bg.gain.exponentialRampToValueAtTime(.0001,now+.24);
-        bass.connect(bg);bg.connect(audioContext.destination);bass.start(now);bass.stop(now+.26);
-      }
-      if(beat===1||beat===3||beat===5||beat===7){
-        const note=musicMelody[(bar*4+Math.floor(beat/2))%musicMelody.length];
-        const osc=audioContext.createOscillator(),mg=audioContext.createGain();
-        osc.type="sine";osc.frequency.setValueAtTime(note,now);
-        mg.gain.setValueAtTime(.0001,now);mg.gain.linearRampToValueAtTime(.022,now+.018);mg.gain.exponentialRampToValueAtTime(.0001,now+.22);
-        osc.connect(mg);mg.connect(audioContext.destination);osc.start(now);osc.stop(now+.24);
-      }
-      musicStep++;
-    };
-    tick();musicTimer=window.setInterval(tick,300);
-  }catch{}
+  if(!soundOn || !bgMusic.paused)return;
+  const attempt=bgMusic.play();
+  if(attempt && typeof attempt.catch==="function")attempt.catch(()=>{});
 }
 function stopBackgroundMusic(){
-  if(musicTimer!==null){clearInterval(musicTimer);musicTimer=null;}
+  bgMusic.pause();
+  bgMusic.currentTime=0;
 }
 function playSound(kind="tap"){
   if(!soundOn)return;
