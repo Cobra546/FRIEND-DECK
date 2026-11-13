@@ -1,11 +1,11 @@
-const CACHE_NAME = "friend-deck-pwa-v7";
+const CACHE_NAME = "friend-deck-pwa-v8";
 
 // These files are required for the installed app and all local game screens.
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
-  "./icon.svg",
+  "./InShot_20261113_131236610.jpg",
   "./style.css?v=frienddeck-pwa-install-20261111b",
   "./arcade.js?v=frienddeck-pwa-install-20261111b",
   "./app.js?v=frienddeck-offline-music-20261113",
