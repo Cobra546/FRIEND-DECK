@@ -6,7 +6,7 @@ const APP_SHELL = [
   "./icon.svg",
   "./style.css?v=frienddeck-pwa-install-20261111b",
   "./arcade.js?v=frienddeck-pwa-install-20261111b",
-  "./app.js?v=frienddeck-mp3-20261113",
+  "./app.js?v=frienddeck-offline-music-20261113",
   "./profiles.js?v=frienddeck-pwa-install-20261111b",
   "./Friend%20Deck%20%E2%80%93%20Game%20Night.mp3"
 ];
