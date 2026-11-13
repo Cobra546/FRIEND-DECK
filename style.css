@@ -63,3 +63,16 @@
 .fd-legacy summary{cursor:pointer;font-size:12px;font-weight:800;color:#76539a}
 .fd-legacy p{font-size:11px;color:#817986;line-height:1.5}
 .fd-legacy .fd-form{margin-top:10px}
+
+.fd-access-gate{position:fixed;inset:0;z-index:999;display:grid;place-items:center;padding:18px;background:#fff8e9ee;backdrop-filter:blur(8px)}
+.fd-access-card{width:min(100%,430px);padding:28px 23px;border:1px solid #eee3d3;border-radius:24px;background:#fffdf7;box-shadow:0 24px 70px #21172b24;text-align:center}
+.fd-access-card h2{font:700 30px Fredoka,sans-serif;margin:9px 0}
+.fd-access-card p{font-size:13px;line-height:1.6;color:#817986;margin:0 0 20px}
+.fd-access-card .btn{width:100%;margin:5px 0}
+.fd-access-card small{display:block;margin-top:12px;color:#8b8490;font-size:10px}
+.fd-avatars button{width:64px;height:64px;padding:3px;overflow:hidden;border-radius:16px;background:#fff}
+.fd-avatars button img{width:100%;height:100%;object-fit:cover;border-radius:12px;display:block}
+.fd-avatar-img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
+.fd-leader-row b{display:flex;align-items:center;gap:7px}
+.fd-leader-avatar{width:27px;height:27px;object-fit:cover;border-radius:9px}
+.fd-close[hidden]{display:none!important}
