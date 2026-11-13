@@ -1,4 +1,4 @@
-const CACHE_NAME = "friend-deck-pwa-v4";
+const CACHE_NAME = "friend-deck-pwa-v5";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,7 +6,7 @@ const APP_SHELL = [
   "./icon.svg",
   "./style.css?v=frienddeck-pwa-install-20261111b",
   "./arcade.js?v=frienddeck-pwa-install-20261111b",
-  "./app.js?v=frienddeck-music-20261112",
+  "./app.js?v=frienddeck-mp3-20261113",
   "./profiles.js?v=frienddeck-pwa-install-20261111b"
 ];
 
