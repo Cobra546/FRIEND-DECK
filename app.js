@@ -25,7 +25,7 @@ const musicChords = [
   [196.00,246.94,293.66,392.00]
 ];
 const musicMelody = [523.25,659.25,587.33,783.99,659.25,587.33,493.88,587.33,523.25,659.25,783.99,659.25,587.33,523.25,493.88,587.33];
-const bgMusic = new Audio("https://raw.githubusercontent.com/Cobra546/GUESS-THE-FACTS/main/Friend%20Deck%20%E2%80%93%20Game%20Night.mp3");
+const bgMusic = new Audio("./Friend%20Deck%20%E2%80%93%20Game%20Night.mp3");
 bgMusic.loop = true;
 bgMusic.preload = "auto";
 bgMusic.volume = 0.38;
