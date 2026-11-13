@@ -12,16 +12,16 @@
   "categories": ["games", "social"],
   "icons": [
     {
-      "src": "icon.svg",
+      "src": "InShot_20261113_131236610.jpg",
       "sizes": "any",
-      "type": "image/svg+xml",
+      "type": "image/jpeg",
       "purpose": "any"
     },
     {
-      "src": "icon.svg",
+      "src": "InShot_20261113_131236610.jpg",
       "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
+      "type": "image/jpeg",
+      "purpose": "any"
     }
   ]
 }
