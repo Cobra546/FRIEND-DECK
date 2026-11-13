@@ -1,4 +1,4 @@
-const CACHE_NAME = "friend-deck-pwa-v5";
+const CACHE_NAME = "friend-deck-pwa-v6";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -7,7 +7,8 @@ const APP_SHELL = [
   "./style.css?v=frienddeck-pwa-install-20261111b",
   "./arcade.js?v=frienddeck-pwa-install-20261111b",
   "./app.js?v=frienddeck-mp3-20261113",
-  "./profiles.js?v=frienddeck-pwa-install-20261111b"
+  "./profiles.js?v=frienddeck-pwa-install-20261111b",
+  "./Friend%20Deck%20%E2%80%93%20Game%20Night.mp3"
 ];
 
 self.addEventListener("install", (event) => {
