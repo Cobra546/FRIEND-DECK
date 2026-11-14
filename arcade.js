@@ -121,7 +121,11 @@ const css=document.createElement('style');css.textContent=`
 #arcadePlay .draw-tools button.active{outline:2px solid #9363b5;background:#f4eaff} 
 #arcadePlay .draw-word-choice{width:100%;padding:14px!important;border:1px solid #e8d9f1!important;border-radius:13px!important;background:#fff!important;font-weight:800} 
 #arcadePlay .draw-guess-row{display:grid;grid-template-columns:1fr auto;gap:8px} 
-#arcadePlay .draw-guess-row button{margin:0} 
+#arcadePlay .draw-guess-row button{margin:0}
+#arcadePlay .room-code-share{margin:12px 0 18px;padding:18px 14px;border:2px solid #d9c6e8;border-radius:18px;background:linear-gradient(135deg,#f4eaff,#fff8ed);text-align:center;box-shadow:0 5px 0 #e6d9ef}
+#arcadePlay .room-code-share small{display:block;font-size:10px;letter-spacing:.18em;font-weight:900;color:#80509f;margin-bottom:7px}
+#arcadePlay .room-code-share strong{display:block;font:700 clamp(36px,10vw,48px) Fredoka,sans-serif;letter-spacing:.18em;line-height:1.2;color:#30243b;overflow-wrap:anywhere}
+#arcadePlay .room-code-share button{margin:12px 0 0!important;padding:10px 20px!important;border:0;border-radius:999px;background:#30243b;color:white;font-weight:800}
 `;document.head.append(css);
 const teasers=[['FUN FACT #01','I can name 20 footballers just by their clubs.','— ???'],['HOT TAKE #02','Pineapple belongs on pizza.','— ???'],['SECRET TALENT #03','I can recognise songs in two seconds.','— ???'],['PLOT TWIST #04','I have never watched a full horror movie.','— ???'],['RANDOM #05','I would choose a night drive over a party.','— ???'],['DID YOU KNOW #06','I once stayed awake for an entire movie marathon.','— ???']];
 const flashPicks=[...teasers].sort(()=>Math.random()-.5).slice(0,3);
@@ -318,9 +322,10 @@ async function refreshOnline(){
 }
 function onlineModeration(snap){
  const me=snap.playerId,host=snap.isHost;
- return '<div class="box"><h3>Room controls</h3><p class="muted">Room code: <b>'+esc(snap.code)+'</b> · Host: '+esc(snap.players.find(p=>p.id===snap.hostPlayerId)?.display_name||snap.players.find(p=>p.id===snap.hostPlayerId)?.name||"Player")+'</p><div class="players">'+snap.players.map(p=>'<div>'+esc(p.display_name||p.name)+' '+(p.id===snap.hostPlayerId?'👑':'')+(host&&p.id!==me?' <button data-kick="'+p.id+'">Kick</button>':'')+(p.id!==me?' <button data-voteout="'+p.id+'">Vote out</button>':'')+'</div>').join('')+'</div><button class="btn btn-light" id="leaveOnline">Leave room</button></div>';
+ return '<div class="box"><h3>Room controls</h3><div class="room-code-share"><small>ROOM CODE · SHARE WITH FRIENDS</small><strong>'+esc(snap.code)+'</strong><button type="button" data-copy-room-code="'+esc(snap.code)+'">Copy room code</button></div><p class="muted">Host: '+esc(snap.players.find(p=>p.id===snap.hostPlayerId)?.display_name||snap.players.find(p=>p.id===snap.hostPlayerId)?.name||"Player")+'</p><div class="players">'+snap.players.map(p=>'<div>'+esc(p.display_name||p.name)+' '+(p.id===snap.hostPlayerId?'👑':'')+(host&&p.id!==me?' <button data-kick="'+p.id+'">Kick</button>':'')+(p.id!==me?' <button data-voteout="'+p.id+'">Vote out</button>':'')+'</div>').join('')+'</div><button class="btn btn-light" id="leaveOnline">Leave room</button></div>';
 }
 function bindModeration(){
+ play.querySelectorAll('[data-copy-room-code]').forEach(b=>b.onclick=async()=>{const code=b.dataset.copyRoomCode;try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(code)}else{const field=document.createElement('textarea');field.value=code;field.style.position='fixed';field.style.opacity='0';document.body.append(field);field.select();const ok=document.execCommand('copy');field.remove();if(!ok)throw new Error('Copy unavailable')}b.textContent='Copied!';}catch{alert('Room code: '+code)}});
  play.querySelectorAll('[data-kick]').forEach(b=>b.onclick=async()=>{if(!confirm("Kick this player?"))return;try{await api("kick",{targetPlayerId:b.dataset.kick});await refreshOnline()}catch(e){alert(e.message)}});
  play.querySelectorAll('[data-voteout]').forEach(b=>b.onclick=async()=>{try{const r=await api("vote_out",{targetPlayerId:b.dataset.voteout});alert(r.removed?"Player removed by majority vote.":"Vote recorded. Majority is required.");await refreshOnline()}catch(e){alert(e.message)}});
  const leave=document.getElementById("leaveOnline");if(leave)leave.onclick=async()=>{try{await api("leave_room");}catch{}clearInterval(pollHandle);pollHandle=null;online=null;lastRenderedSnapshot="";clearOnlineSession();show("arcadeHub");};
@@ -336,7 +341,7 @@ function renderOnline(){
  recordOnlineEnd(s,pub,priv,me);
  let body="",title=state.title;
  if(s.phase==="lobby"){
-  body='<div class="box"><h2>Room '+esc(s.code)+'</h2><p class="muted">'+players.length+' / '+state.max+' players · '+state.min+' minimum. Share the code with friends.</p><div class="players">'+players.map(p=>'<div>'+esc(p.name||p.display_name)+(p.id===s.hostPlayerId?' 👑 Host':'')+'</div>').join('')+'</div>'+(s.isHost?(state.id==="mafia"?'<label class="muted">Number of Killers</label><select id="onlineKillers">'+Array.from({length:maxKillers(players.length)},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+'</option>').join('')+'</select>':'')+'<button class="btn btn-dark" id="onlineStart" '+(players.length<state.min?'disabled':'')+'>Start game →</button>':'<p class="muted">Waiting for the host to start…</p>')+'</div>'+onlineModeration(s);
+  body='<div class="box"><h2>Room lobby</h2><p class="muted">'+players.length+' / '+state.max+' players · '+state.min+' minimum. Share the code above with friends.</p><div class="players">'+players.map(p=>'<div>'+esc(p.name||p.display_name)+(p.id===s.hostPlayerId?' 👑 Host':'')+'</div>').join('')+'</div>'+(s.isHost?(state.id==="mafia"?'<label class="muted">Number of Killers</label><select id="onlineKillers">'+Array.from({length:maxKillers(players.length)},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+'</option>').join('')+'</select>':'')+'<button class="btn btn-dark" id="onlineStart" '+(players.length<state.min?'disabled':'')+'>Start game →</button>':'<p class="muted">Waiting for the host to start…</p>')+'</div>'+onlineModeration(s);
   shell(title,body);const st=document.getElementById("onlineStart");if(st)st.onclick=async()=>{try{await api("start_game",{killerCount:Number(document.getElementById("onlineKillers")?.value||0)});await refreshOnline()}catch(e){alert(e.message)}};
  
 }else if(s.phase==="draw_choose"){
