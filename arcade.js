@@ -175,54 +175,131 @@ const scrabbleValues={A:1,B:3,C:3,D:2,E:1,F:4,G:2,H:4,I:1,J:8,K:5,L:1,M:3,N:1,O:
 const scrabbleBag=()=>{const counts={A:9,B:2,C:2,D:4,E:12,F:2,G:3,H:2,I:9,J:1,K:1,L:4,M:2,N:6,O:8,P:2,Q:1,R:6,S:4,T:6,U:4,V:2,W:2,X:1,Y:2,Z:1,"?":2};return Object.entries(counts).flatMap(([l,n])=>Array(n).fill(l));};
 const premium={TW:[[0,0],[0,7],[0,14],[7,0],[7,14],[14,0],[14,7],[14,14]],DW:[[1,1],[2,2],[3,3],[4,4],[7,7],[10,10],[11,11],[12,12],[13,13],[1,13],[2,12],[3,11],[4,10],[10,4],[11,3],[12,2],[13,1]],TL:[[1,5],[1,9],[5,1],[5,5],[5,9],[5,13],[9,1],[9,5],[9,9],[9,13],[13,5],[13,9]],DL:[[0,3],[0,11],[2,6],[2,8],[3,0],[3,7],[3,14],[6,2],[6,6],[6,8],[6,12],[7,3],[7,11],[8,2],[8,6],[8,8],[8,12],[11,0],[11,7],[11,14],[12,6],[12,8],[14,3],[14,11]]};
 const premiumAt=(r,col)=>Object.entries(premium).find(([k,a])=>a.some(([y,x])=>y===r&&x===col))?.[0]||"";
-const smallWords=new Set(("a an am as at be by do go he if in is it me my no of oh on or ox so to up us we ad ah ai al ar ba bi bo da de ed ef eh el em en er es et ex fa fe gi ha hi hm ho id jo ka ki la li lo ma mi mm mo mu na ne nu od oe oi om op os ow ox pa pe pi po qi re sh si ta ti uh um un ut ya ye yo za ace act add age ago aid aim air ale all and ant any ape apt arc are ark arm art ash ask ate awe axe bad bag ban bar bat bay bed bee beg bet bid big bin bit boa bob bog boo bow box boy bud bug bun bus but buy cab can cap car cat cob cod cog cop cot cow coy cry cub cup cut dab dad dam day den dew did die dig dim dip dog dot dry due dug ear eat ebb eco egg ego elf elk elm end era eve ewe eye fad fan far fat fax fay fed fee few fib fig fin fir fit fix flu fly foe fog for fox fry fun fur gap gas gel gem get gig gin god got gum gun gut guy gym had ham has hat hay hem hen her hid him hip his hit hob hog hop hot how hub hue hug hum hut ice icy ill imp ink inn ion ire irk its ivy jam jar jaw jay jet jew jig job jog jot joy jug jut keg ken key kid kin kit lab lad lag lap law lay lea led leg let lid lie lip lit lob log lot low lug mad man map mat max may men met mid mix mob mod mop mow mud mug mum nab nag nap nay net new nib nil nip nit nod nor not now nun nut oak oar oat odd ode off oft ohm oil old one opt orb ore our out owe owl own pad pal pan pap par pat paw pay pea peg pen per pet pew pie pig pin pit ply pod pop pot pro pry pub pug pun pup pus put rag ram ran rap rat raw ray red rib rid rig rim rip rob rod roe rot row rub rue rug rum run rye sad sag sap sat saw say sea see set sew she shy sin sip sir sis sit six ski sky sly sob sod son sop sow soy spa spy sub sue sum sun tab tad tag tan tap tar tax tea ten the thy tic tie tin tip toe ton too top toy try tub tug two use van vat vet vex via vie vim vow wag war was wax way web wed wee wet who why wig win wit woe won wow yak yam yap yaw yea yen yes yet yin you zap zen zip zoo").split(" "));
-const scrabbleWordOK=w=>smallWords.has(w.toLowerCase());
-function scrabbleScore(word,tiles,coords){let sum=0,mult=1;for(let i=0;i<word.length;i++){const [r,col]=coords[i],letter=word[i],newTile=tiles.some(t=>t.r===r&&t.c===col);let v=tiles.find(t=>t.r===r&&t.c===col&&t.blank)?0:(scrabbleValues[letter]||0);if(newTile){const p=premiumAt(r,col);if(p==="DL")v*=2;if(p==="TL")v*=3;if(p==="DW")mult*=2;if(p==="TW")mult*=3;}sum+=v;}return sum*mult;}
-function scrabbleStart(){
- const s=state;s.phase="scrabble_play";s.board=Array.from({length:15},()=>Array(15).fill(null));s.bag=scrabbleBag().sort(()=>Math.random()-.5);s.players.forEach(p=>{p.rack=[];p.score=0;});s.players.forEach(p=>scrabbleDraw(p,7));s.turn=0;s.passCount=0;s.move=[];scrabbleRender(true);
+const starterWords=new Set(("a an am as at be by do go he if in is it me my no of oh on or ox so to up us we ad ah ai al ar ba bi bo da de ed ef eh el em en er es et ex fa fe gi ha hi hm ho id jo ka ki la li lo ma mi mm mo mu na ne nu od oe oi om op os ow pa pe pi po qi re sh si ta ti uh um un ut ya ye yo za ace act add age ago aid aim air ale all and ant any ape apt arc are ark arm art ash ask ate awe axe bad bag ban bar bat bay bed bee beg bet bid big bin bit boa bob bog boo bow box boy bud bug bun bus buy cab can cap car cat cob cod cog cop cot cow coy cry cub cup cut dab dad dam day den dew did die dig dim dip dog dot dry due dug ear eat ebb eco egg ego elf elk elm end era eve ewe eye fad fan far fat fax fay fed fee few fib fig fin fir fit fix flu fly foe fog for fox fry fun fur gap gas gel gem get gig gin god got gum gun gut guy gym had ham has hat hay hem hen her hid him hip his hit hob hog hop hot how hub hue hug hum hut ice icy ill imp ink inn ion ire irk its ivy jam jar jaw jay jet jew jig job jog jot joy jug jut keg ken key kid kin kit lab lad lag lap law lay lea led leg let lid lie lip lit lob log lot low lug mad man map mat max may men met mid mix mob mod mop mow mud mug mum nab nag nap nay net new nib nil nip nit nod nor not now nun nut oak oar oat odd ode off oft ohm oil old one opt orb ore our out owe owl own pad pal pan pap par pat paw pay pea peg pen per pet pew pie pig pin pit ply pod pop pot pro pry pub pug pun pup pus put rag ram ran rap rat raw ray red rib rid rig rim rip rob rod roe rot row rub rue rug rum run rye sad sag sap sat saw say sea see set sew she shy sin sip sir sis sit six ski sky sly sob sod son sop sow soy spa spy sub sue sum sun tab tad tag tan tap tar tax tea ten the thy tic tie tin tip toe ton too top toy try tub tug two use van vat vet vex via vie vim vow wag war was wax way web wed wee wet who why wig win wit woe won wow yak yam yap yaw yea yen yes yet yin you zap zen zip").split(/\s+/));
+let scrabbleLexicon=new Set(starterWords);
+let scrabbleLexiconSource="built-in starter list";
+async function scrabbleLoadLexicon(){
+ try{
+  const response=await fetch("./scrabble-words.txt",{cache:"no-store"});
+  if(!response.ok)return;
+  const raw=await response.text(),words=raw.toUpperCase().split(/[\s,;]+/).filter(w=>/^[A-Z]{2,15}$/.test(w));
+  if(words.length>1000){scrabbleLexicon=new Set(words);scrabbleLexiconSource="local licensed word list";}
+ }catch(e){console.info("Optional Scrabble word list unavailable; using starter list.");}
 }
+const scrabbleWordOK=w=>scrabbleLexicon.has(String(w||"").toUpperCase());
 function scrabbleDraw(p,n){for(let i=0;i<n&&state.bag.length;i++)p.rack.push(state.bag.pop());}
+function scrabbleStart(){
+ const s=state;s.phase="scrabble_play";s.board=Array.from({length:15},()=>Array(15).fill(null));s.bag=scrabbleBag().sort(()=>Math.random()-.5);
+ s.players.forEach(p=>{p.rack=[];p.score=0;});s.players.forEach(p=>scrabbleDraw(p,7));
+ s.turn=0;s.passCount=0;s.move=[];s.selected=null;s.scrabbleEnded=false;
+ scrabbleLoadLexicon().finally(()=>{if(state===s&&s.phase==="scrabble_play")scrabbleRender(true);});
+ scrabbleRender(true);
+}
+function scrabbleTileAt(r,col){return state.move.find(t=>t.r===r&&t.c===col)||state.board[r][col];}
+function scrabbleLine(r,col,dr,dc){
+ let y=r,x=col;while(y-dr>=0&&y-dr<15&&x-dc>=0&&x-dc<15&&state.board[y-dr][x-dc]){y-=dr;x-=dc;}
+ const coords=[],letters=[];while(y>=0&&y<15&&x>=0&&x<15){const t=scrabbleTileAt(y,x);if(!t)break;coords.push([y,x]);letters.push(t.letter);y+=dr;x+=dc;}
+ return {coords,word:letters.join("")};
+}
+function scrabbleScore(word,tiles,coords){
+ let sum=0,mult=1;
+ for(let i=0;i<word.length;i++){
+  const [r,col]=coords[i],tile=tiles.find(t=>t.r===r&&t.c===col),letter=word[i];
+  let value=tile?.blank?0:(scrabbleValues[letter]||0);
+  if(tile){const p=premiumAt(r,col);if(p==="DL")value*=2;if(p==="TL")value*=3;if(p==="DW")mult*=2;if(p==="TW")mult*=3;}
+  sum+=value;
+ }
+ return sum*mult;
+}
 function scrabbleRender(showRules=false){
- const s=state,p=s.players[s.turn],board=s.board;
- const squares=board.map((row,r)=>row.map((cell,col)=>{const prem=premiumAt(r,col),label=cell?esc(cell.letter):prem||((r===7&&col===7)?"★":""),cls=cell?"occupied":prem.toLowerCase();return '<button type="button" class="sc-square '+cls+'" data-cell="'+r+','+col+'" aria-label="Row '+(r+1)+' column '+(col+1)+'">'+label+'</button>'}).join("")).join("");
+ const s=state,p=s.players[s.turn];if(!p)return;
+ const squares=s.board.map((row,r)=>row.map((cell,col)=>{
+  const pending=s.move.find(t=>t.r===r&&t.c===col),placed=cell||pending,prem=premiumAt(r,col);
+  const label=placed?esc(placed.letter)+(placed.blank?"·":""):prem||((r===7&&col===7)?"★":"");
+  const cls=placed?"occupied":prem.toLowerCase();
+  return '<button type="button" class="sc-square '+cls+'" data-cell="'+r+','+col+'" '+(placed?'disabled':'')+' aria-label="Row '+(r+1)+' column '+(col+1)+'">'+label+'</button>';
+ }).join("")).join("");
  const rack=p.rack.map((l,i)=>'<button class="sc-tile '+(s.selected===i?'selected':'')+'" data-rack="'+i+'" '+(s.move.some(t=>t.rackIndex===i)?'disabled':'')+'>'+(l==="?"?"★":l)+'<small>'+(scrabbleValues[l]||0)+'</small></button>').join("");
- const pending=(s.move||[]).map(t=>t.letter+" → "+(t.r+1)+","+(t.c+1)).join(" · ");
- shell("🟩 Scrabble · "+esc(p.name),'<div class="box sc-game"><div class="sc-scorebar">'+s.players.map(x=>'<span><b>'+esc(x.name)+'</b> '+x.score+'</span>').join("")+'</div><p class="muted">Turn '+(s.turn+1)+' / '+s.players.length+' · Tile bag: '+s.bag.length+'</p><div class="sc-board">'+squares+'</div><p><b>Your rack</b></p><div class="sc-rack">'+rack+'</div><p class="muted">'+(s.selected==null?'Select a tile, then select an empty board square.':"Selected tile: "+(p.rack[s.selected]==="?"?"Blank":p.rack[s.selected]))+'</p><p class="muted">Pending: '+esc(pending||"No tiles placed")+'</p><div class="sc-actions"><button class="btn btn-light" id="scUndo">Undo placement</button><button class="btn btn-light" id="scPass">Pass turn</button><button class="btn btn-dark" id="scSubmit" '+(!s.move.length?'disabled':'')+'>Play word →</button></div></div>');
- play.querySelectorAll("[data-rack]").forEach(b=>b.onclick=()=>{s.selected=Number(b.dataset.rack);scrabbleRender()});
- play.querySelectorAll("[data-cell]").forEach(b=>b.onclick=()=>{if(s.selected==null)return alert("Choose a tile first.");const [r,col]=b.dataset.cell.split(",").map(Number);if(s.board[r][col]||s.move.some(t=>t.r===r&&t.c===col))return;let letter=p.rack[s.selected],blank=letter==="?";if(blank){letter=(prompt("Blank tile: choose a letter A–Z")||"").trim().toUpperCase();if(!/^[A-Z]$/.test(letter))return;}s.move.push({r,c:col,letter,rackIndex:s.selected,blank});s.selected=null;scrabbleRender()});
- document.getElementById("scUndo").onclick=()=>{const t=s.move.pop();if(t)s.selected=t.rackIndex;scrabbleRender()};
- document.getElementById("scPass").onclick=()=>{s.move=[];s.passCount++;s.turn=(s.turn+1)%s.players.length;if(s.passCount>=s.players.length*2)return scrabbleEnd();scrabbleRender()};
+ const pending=s.move.map(t=>t.letter+" → "+(t.r+1)+","+(t.c+1)).join(" · ");
+ shell("🟩 Scrabble · "+esc(p.name),'<div class="box sc-game"><div class="sc-scorebar">'+s.players.map(x=>'<span><b>'+esc(x.name)+'</b> '+x.score+'</span>').join("")+'</div><p class="muted">Turn '+(s.turn+1)+' / '+s.players.length+' · Tile bag: '+s.bag.length+' · '+esc(scrabbleLexiconSource)+'</p><div class="sc-board">'+squares+'</div><p><b>Your rack</b></p><div class="sc-rack">'+rack+'</div><label class="muted">Direction for this turn <select id="scDirection"><option value="h">Horizontal →</option><option value="v">Vertical ↓</option></select></label><p class="muted">'+(s.selected==null?'Select a tile, then an empty board square.':"Selected tile: "+(p.rack[s.selected]==="?"?"Blank tile":"Letter "+p.rack[s.selected]))+'</p><p class="muted">Pending: '+esc(pending||"No tiles placed")+'</p><div class="sc-actions"><button class="btn btn-light" id="scUndo" '+(!s.move.length?'disabled':'')+'>Undo last tile</button><button class="btn btn-light" id="scExchange" '+(s.selected==null||s.bag.length<1?'disabled':'')+'>Exchange selected tile</button><button class="btn btn-light" id="scPass">Pass turn</button><button class="btn btn-dark" id="scSubmit" '+(!s.move.length?'disabled':'')+'>Play word →</button></div></div>');
+ play.querySelectorAll("[data-rack]").forEach(b=>b.onclick=()=>{s.selected=Number(b.dataset.rack);scrabbleRender();});
+ play.querySelectorAll("[data-cell]").forEach(b=>b.onclick=()=>{
+  if(s.selected==null)return alert("Choose a tile first.");
+  const [r,col]=b.dataset.cell.split(",").map(Number);if(scrabbleTileAt(r,col))return;
+  let letter=p.rack[s.selected],blank=letter==="?";
+  if(blank){letter=(prompt("Blank tile: choose a letter A–Z")||"").trim().toUpperCase();if(!/^[A-Z]$/.test(letter))return;}
+  s.move.push({r,c:col,letter,rackIndex:s.selected,blank});s.selected=null;scrabbleRender();
+ });
+ document.getElementById("scUndo").onclick=()=>{const t=s.move.pop();if(t)s.selected=t.rackIndex;scrabbleRender();};
+ document.getElementById("scExchange").onclick=()=>{
+  if(s.selected==null||!s.bag.length)return;
+  const old=p.rack.splice(s.selected,1)[0];s.bag.unshift(old);s.bag.sort(()=>Math.random()-.5);scrabbleDraw(p,1);
+  s.selected=null;s.move=[];s.passCount=0;s.turn=(s.turn+1)%s.players.length;scrabbleRender();
+ };
+ document.getElementById("scPass").onclick=()=>{
+  s.move=[];s.selected=null;s.passCount++;if(s.passCount>=s.players.length)return scrabbleEnd();
+  s.turn=(s.turn+1)%s.players.length;scrabbleRender();
+ };
  document.getElementById("scSubmit").onclick=()=>scrabbleCommit();
  if(showRules)scrabbleRulesPopup();
 }
 function scrabbleRulesPopup(){
- const overlay=document.createElement("div");overlay.className="sc-rules-overlay";overlay.innerHTML='<section class="sc-rules"><h2>Scrabble · Quick rules</h2><p><b>🟥 TW — Triple Word:</b> total word score × 3.</p><p><b>🌸 DW — Double Word:</b> total word score × 2.</p><p><b>🟦 TL — Triple Letter:</b> that new letter × 3.</p><p><b>🩵 DL — Double Letter:</b> that new letter × 2.</p><p>Each player starts with 7 random tiles. First word covers the centre star. Build one straight line and connect to existing tiles. Every new word must be valid. Premium squares only count on the turn a tile is first placed. Use all 7 tiles for a +50 bonus.</p><button class="btn btn-dark" id="scRulesOK">Got it — start playing</button></section>';document.body.append(overlay);document.getElementById("scRulesOK").onclick=()=>overlay.remove();
+ const overlay=document.createElement("div");overlay.className="sc-rules-overlay";
+ overlay.innerHTML='<section class="sc-rules"><h2>Scrabble · Quick rules</h2><p><b>🟥 TW — Triple Word:</b> total word score × 3.</p><p><b>🌸 DW — Double Word:</b> total word score × 2.</p><p><b>🟦 TL — Triple Letter:</b> that new letter × 3.</p><p><b>🩵 DL — Double Letter:</b> that new letter × 2.</p><p>Each player starts with 7 random tiles. First word covers the centre star. Build one straight line and connect to existing tiles. Every new word must be valid. Premium squares only count the first time a tile is placed. Use all 7 tiles for a +50 bonus.</p><p><b>Dictionary:</b> '+esc(scrabbleLexiconSource)+'. An official tournament list needs its licensed word file installed.</p><button class="btn btn-dark" id="scRulesOK">Got it — start playing</button></section>';
+ document.body.append(overlay);document.getElementById("scRulesOK").onclick=()=>overlay.remove();
 }
 function scrabbleCommit(){
  const s=state,p=s.players[s.turn],move=s.move;if(!move.length)return;
- const all=move.map(t=>({...t}));const occupied=all.concat(s.board.flatMap((row,r)=>row.map((cell,c)=>cell?{r,c,letter:cell.letter,old:true}:null).filter(Boolean)));
- const rows=new Set(all.map(t=>t.r)),cols=new Set(all.map(t=>t.c));if(rows.size>1&&cols.size>1)return alert("All tiles in one turn must be in one straight line.");
- all.sort((a,b)=>rows.size===1?a.c-b.c:a.r-b.r);
- if(s.board.flat().every(x=>!x)){if(!all.some(t=>t.r===7&&t.c===7))return alert("Your first word must cover the centre star.");}
- const horizontal=rows.size===1&&(cols.size!==1||document.getElementById("scDirection")?.value!=="v"),dr=horizontal?0:1,dc=horizontal?1:0;
- let r=all[0].r,c=all[0].c;while(r-dr>=0&&c-dc>=0&&s.board[r-dr]?.[c-dc]){r-=dr;c-=dc;}
- const coords=[],word=[];let newCount=0;
- while(r<15&&c<15&&(s.board[r][c]||move.find(t=>t.r===r&&t.c===c))){const tile=move.find(t=>t.r===r&&t.c===c),old=s.board[r][c];coords.push([r,c]);word.push((tile||old).letter);if(tile)newCount++;r+=dr;c+=dc;}
- if(newCount!==all.length)return alert("Tiles must touch each other without gaps.");
- const connected=s.board.flat().some(Boolean)?all.some(t=>[[1,0],[-1,0],[0,1],[0,-1]].some(([y,x])=>s.board[t.r+y]?.[t.c+x])):true;
- if(!connected)return alert("Your word must connect to an existing tile.");
- if(word.length<2||!scrabbleWordOK(word.join("")))return alert('"'+word.join("")+'" is not in the offline word list. Try a common English word.');
- let score=scrabbleScore(word.join(""),move,coords),crosses=[];
- for(const t of all){const cross=[],vertical=horizontal;let y=t.r,x=t.c;if(vertical){while(x>0&&s.board[y][x-1])x--;while(x<15&&(s.board[y][x]||move.some(m=>m.r===y&&m.c===x))){const m=move.find(m=>m.r===y&&m.c===x);cross.push({r:y,c:x,letter:m?.letter||s.board[y][x].letter});x++;}}else{while(y>0&&s.board[y-1][x])y--;while(y<15&&(s.board[y][x]||move.some(m=>m.r===y&&m.c===x))){const m=move.find(m=>m.r===y&&m.c===x);cross.push({r:y,c:x,letter:m?.letter||s.board[y][x].letter});y++;}}if(cross.length>1){const w=cross.map(x=>x.letter).join("");if(!scrabbleWordOK(w))return alert('"'+w+'" is not in the offline word list.');const coords2=cross.map(x=>[x.r,x.c]);crosses.push(scrabbleScore(w,move,coords2));}}
- score+=crosses.reduce((a,b)=>a+b,0);if(move.length===7)score+=50;
+ const rows=new Set(move.map(t=>t.r)),cols=new Set(move.map(t=>t.c));
+ if(rows.size>1&&cols.size>1)return alert("All new tiles must be placed in one straight line.");
+ let horizontal=rows.size===1;
+ if(rows.size===1&&cols.size===1){
+  const t=move[0],h=scrabbleLine(t.r,t.c,0,1),v=scrabbleLine(t.r,t.c,1,0);
+  if(h.coords.length<2&&v.coords.length>1)horizontal=false;
+  else if(v.coords.length<2&&h.coords.length>1)horizontal=true;
+  else horizontal=document.getElementById("scDirection")?.value!=="v";
+ }
+ const dr=horizontal?0:1,dc=horizontal?1:0;
+ const sorted=move.slice().sort((a,b)=>horizontal?a.c-b.c:a.r-b.r);
+ let y=sorted[0].r,x=sorted[0].c;
+ while(y-dr>=0&&x-dc>=0&&s.board[y-dr]?.[x-dc]){y-=dr;x-=dc;}
+ const main=scrabbleLine(y,x,dr,dc);
+ if(main.coords.length<2)return alert("Your move must create a word of at least two letters.");
+ if(move.some(t=>!main.coords.some(([r,col])=>r===t.r&&col===t.c)))return alert("Your new tiles must all connect in one continuous line.");
+ if(s.board.flat().every(cell=>!cell)){
+  if(!move.some(t=>t.r===7&&t.c===7))return alert("Your first word must cover the centre star.");
+ }else{
+  const connected=main.coords.some(([r,col])=>s.board[r][col])||move.some(t=>[[1,0],[-1,0],[0,1],[0,-1]].some(([dy,dx])=>s.board[t.r+dy]?.[t.c+dx]));
+  if(!connected)return alert("Your word must connect to the existing board.");
+ }
+ const words=[{word:main.word,coords:main.coords}];
+ const crossSeen=new Set();
+ for(const t of move){
+  const cross=scrabbleLine(t.r,t.c,horizontal?1:0,horizontal?0:1);
+  if(cross.coords.length>1){
+   const key=cross.coords.map(([r,col])=>r+","+col).join("|");
+   if(!crossSeen.has(key)){crossSeen.add(key);words.push(cross);}
+  }
+ }
+ for(const item of words)if(!scrabbleWordOK(item.word))return alert('"'+item.word+'" is not in the loaded word list. Check spelling or install the licensed Scrabble word list.');
+ let score=words.reduce((sum,item)=>sum+scrabbleScore(item.word,move,item.coords),0);
+ if(move.length===7)score+=50;
  move.forEach(t=>{s.board[t.r][t.c]={letter:t.letter,blank:t.blank};});
- // Remove rack tiles by original index in descending order to preserve duplicate letters.
- const indices=move.map(t=>t.rackIndex).sort((a,b)=>b-a);indices.forEach(i=>p.rack.splice(i,1));
+ move.map(t=>t.rackIndex).sort((a,b)=>b-a).forEach(i=>p.rack.splice(i,1));
  p.score+=score;s.passCount=0;scrabbleDraw(p,7-p.rack.length);s.move=[];s.selected=null;
  if(!s.bag.length&&!p.rack.length)return scrabbleEnd(p.id);
  s.turn=(s.turn+1)%s.players.length;scrabbleRender();
 }
-function scrabbleEnd(winnerId=null){const s=state;let best=winnerId||s.players.slice().sort((a,b)=>b.score-a.score)[0]?.id;const winner=s.players.find(p=>p.id===best);shell("Scrabble · Match complete",'<div class="box"><div class="secret">🏆 '+esc(winner?.name||"Player")+' wins!</div>'+s.players.slice().sort((a,b)=>b.score-a.score).map(p=>'<div class="result">'+esc(p.name)+' · '+p.score+' points</div>').join("")+'<button class="btn btn-dark" id="scAgain">Play again ↻</button><button class="btn btn-light" id="scHome">All games</button></div>');document.getElementById("scAgain").onclick=setup;document.getElementById("scHome").onclick=()=>show("arcadeHub");}
+function scrabbleEnd(outPlayerId=null){
+ const s=state;if(s.scrabbleEnded)return;s.scrabbleEnded=true;
+ const remaining=p=>p.rack.reduce((sum,l)=>sum+(scrabbleValues[l]||0),0);
+ if(outPlayerId){const finisher=s.players.find(p=>p.id===outPlayerId);let bonus=0;s.players.filter(p=>p.id!==outPlayerId).forEach(p=>{const value=remaining(p);p.score-=value;bonus+=value;});if(finisher)finisher.score+=bonus;}
+ else s.players.forEach(p=>p.score-=remaining(p));
+ const ranked=s.players.slice().sort((a,b)=>b.score-a.score),top=ranked[0]?.score??0,tied=ranked.filter(p=>p.score===top);
+ shell("Scrabble · Match complete",'<div class="box"><div class="secret">'+(tied.length>1?'It’s a tie!':'🏆 '+esc(tied[0]?.name||"Player")+' wins!')+'</div>'+ranked.map((p,i)=>'<div class="result">'+(i+1)+'. '+esc(p.name)+' · '+p.score+' points</div>').join("")+'<button class="btn btn-dark" id="scAgain">Play again ↻</button><button class="btn btn-light" id="scHome">All games</button></div>');
+ document.getElementById("scAgain").onclick=()=>{s.players.forEach(p=>{p.score=0;p.rack=[];});scrabbleStart();};
+ document.getElementById("scHome").onclick=()=>show("arcadeHub");
+}
 function twoTruthsStart(){const s=state;s.turn=0;s.truthSets={};s.truthOrder=[];s.truthTurn=0;s.players.forEach(p=>p.score=0);twoTruthsWrite();}
 function twoTruthsWrite(){
  const s=state;
