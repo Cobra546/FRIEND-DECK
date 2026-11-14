@@ -140,7 +140,7 @@ function show(id){app.querySelectorAll('.screen').forEach(s=>s.classList.remove(
 function esc(x){return String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 const gameGuides={
  two_truths:{title:"Two Truths & One Lie",intro:"Each player writes three statements: two true and one false. Everyone else tries to spot the lie.",steps:["Add 3–15 players. Pass the device to each player to write two true statements and one lie about themselves.","The statements are shuffled so the lie is not obvious from their position.","Each other player privately votes for the statement they think is false.","The answer is revealed after everyone votes. Correct guesses earn one point.","Repeat until every player has shared a set."],win:"The player with the most correct lie guesses wins."},
- scrabble:{title:"Scrabble",intro:"Build connected words on the classic 15×15 board and score points with letter values and premium squares.",steps:["Each player starts with seven random letter tiles.","The first word must cover the centre star. Later words must connect to tiles already on the board.","Place tiles in one straight horizontal or vertical line. Every word formed must be valid.","DL doubles a new letter, TL triples a new letter, DW doubles the word, and TW triples the word. Premium squares only count the first time a tile is placed there.","Use all seven tiles in one turn for a 50-point bingo bonus."],win:"Highest score wins when the tile bag is empty and a player uses their final tile, or when everyone passes twice."},
+ scrabble:{title:"Scrabble",intro:"Build connected words on the classic 15×15 board and score points with letter values and premium squares.",steps:["Each player starts with seven random letter tiles.","The first word must cover the centre star. Later words must connect to tiles already on the board.","Place tiles in one straight horizontal or vertical line. Every word formed must be valid.","DL doubles a new letter, TL triples a new letter, DW doubles the word, and TW triples the word. Premium squares only count the first time a tile is placed there.","Use all seven tiles in one turn for a 50-point bingo bonus."],win:"Highest score wins when the tile bag is empty and a player uses their final tile, or after two full rounds of consecutive passes."},
  trivia_battle:{title:"Trivia Battle",intro:"All players answer the same question. Correct answers score points, with a speed bonus for the fastest answers.",steps:["Create or join an online room with 2–15 players.","The host starts a 10-question match.","Choose one of four answers before the timer ends.","Correct answers earn points; the fastest correct answer gets a small bonus.","The live scoreboard updates after each question."],win:"The highest score after 10 questions wins. Online only."},
  spyfall:{title:"Spyfall",intro:"Everyone gets the same secret location except one Spy. Ask questions, listen carefully and work out who is bluffing.",steps:["Create or join an online room with 3–15 players.","Everyone privately sees the location; the Spy only sees that they are the Spy.","Ask each other questions without saying the location outright.","The Spy may try to guess the location. The group can open a vote to identify the Spy.","Votes reveal the Spy and the result."],win:"The group wins by identifying the Spy. The Spy wins by correctly guessing the secret location. Online only."},
 
@@ -183,7 +183,7 @@ async function scrabbleLoadLexicon(){
   const response=await fetch("./scrabble-words.txt",{cache:"no-store"});
   if(!response.ok)return;
   const raw=await response.text(),words=raw.toUpperCase().split(/[\s,;]+/).filter(w=>/^[A-Z]{2,15}$/.test(w));
-  if(words.length>1000){scrabbleLexicon=new Set(words);scrabbleLexiconSource="local licensed word list";}
+  if(words.length>=1700){words.forEach(word=>scrabbleLexicon.add(word));scrabbleLexiconSource="CSW24 new-word supplement + built-in starter list";}
  }catch(e){console.info("Optional Scrabble word list unavailable; using starter list.");}
 }
 const scrabbleWordOK=w=>scrabbleLexicon.has(String(w||"").toUpperCase());
@@ -233,11 +233,11 @@ function scrabbleRender(showRules=false){
  document.getElementById("scUndo").onclick=()=>{const t=s.move.pop();if(t)s.selected=t.rackIndex;scrabbleRender();};
  document.getElementById("scExchange").onclick=()=>{
   if(s.selected==null||!s.bag.length)return;
-  const old=p.rack.splice(s.selected,1)[0];s.bag.unshift(old);s.bag.sort(()=>Math.random()-.5);scrabbleDraw(p,1);
+  const old=p.rack.splice(s.selected,1)[0];const drawn=s.bag.pop();if(drawn)p.rack.push(drawn);s.bag.push(old);s.bag.sort(()=>Math.random()-.5);
   s.selected=null;s.move=[];s.passCount=0;s.turn=(s.turn+1)%s.players.length;scrabbleRender();
  };
  document.getElementById("scPass").onclick=()=>{
-  s.move=[];s.selected=null;s.passCount++;if(s.passCount>=s.players.length)return scrabbleEnd();
+  s.move=[];s.selected=null;s.passCount++;if(s.passCount>=s.players.length*2)return scrabbleEnd();
   s.turn=(s.turn+1)%s.players.length;scrabbleRender();
  };
  document.getElementById("scSubmit").onclick=()=>scrabbleCommit();
