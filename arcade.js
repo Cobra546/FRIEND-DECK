@@ -134,6 +134,7 @@ const hub=document.createElement('section');hub.id='arcadeHub';hub.className='sc
 hub.innerHTML='<div class="deck-hero"><div class="deck-kicker">✦ YOUR FRIEND GROUP, SHUFFLED ✦</div><h1>Welcome to <em>Friend Deck.</em></h1><p>Every friend has a plot twist. Pick a game, pass the secrets around, and find out who really knows the group.</p><div class="deck-preview">'+flashPicks.map((x)=>'<article class="flash-card"><small>'+x[0]+'</small><b>'+x[1]+'</b><span>'+x[2]+'</span></article>').join('')+'</div><div class="deck-chits">'+chits.map((x,i)=>'<span class="deck-chit" style="--tilt:'+((i%2?3:-3))+'deg">'+x+'</span>').join('')+'</div></div><div class="deck-section-head"><div class="eyebrow">PICK YOUR NEXT CHAOS</div><h2>Choose a game 🎴</h2><p>Open any game to choose how everyone plays.</p></div><div class="cards">'+games.map(g=>'<article class="card"><div class="game-icon">'+g[1]+'</div><h2>'+(g[0]==='guess_the_facts'?'Guess the Facts':g[2])+'</h2><p>'+ (g[0]==='guess_the_facts'?'Five anonymous facts. One mystery at a time. Can you guess who said that?':g[0]==='burning_bridges'?'Ask, choose, and let the coin decide what gets revealed.':g[0]==='collect_fruits'?'Collect matching fruit chits and complete your secret set.':g[0]==='imposter'?'Describe the secret without giving it away. Find the imposter.':g[0]==='mafia'?'Secret roles, night turns, discussion, and a group vote.':g[0]==='draw_guess'?'Draw a secret word on a shared canvas while friends race to guess.':g[0]==='two_truths'?'Share two truths and one lie. Friends vote to spot the lie.':g[0]==='scrabble'?'Build words on a classic green Scrabble board with premium scoring squares.':g[0]==='trivia_battle'?'Race to answer 10 multiplayer quiz questions.':'Find the Spy hiding among friends using a secret location.')+'</p><button type="button" class="how-to-btn" data-help="'+g[0]+'">How to play</button><small>'+g[3]+'–'+g[4]+' players · '+(['draw_guess','trivia_battle','spyfall'].includes(g[0])?'Online only':(['two_truths','scrabble'].includes(g[0])?'Offline only':'Online & offline'))+'</small><button type="button" class="btn open-game" data-game="'+g[0]+'">Open game <span>↗</span></button></article>').join('')+'</div><footer class="footer">SHUFFLE THE CARDS. REVEAL THE CHAOS. <span>✦</span></footer>';
 const play=document.createElement('section');play.id='arcadePlay';play.className='screen';app.insertBefore(hub,app.firstChild);app.insertBefore(play,hub.nextSibling);document.getElementById('homeScreen').classList.remove('active');
 let state=null;
+ let triviaTimeoutKey="";
  let burnCoinKey='',burnCoinStartedAt=0;
  function coinMarkup(heads,flipping){return '<div class="coin-stage"><div class="coin '+(flipping?'is-flipping':'coin-landed')+'">'+(flipping?'🪙':(heads?'HEADS':'TAILS'))+'</div><p class="muted">'+(flipping?'Flipping the coin…':'Coin landed!')+'</p></div>'}
 function show(id){app.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
@@ -496,6 +497,11 @@ function updateOnlineClock(snap){
  }else if(snap?.phase==="mafia_discussion"){
   const left=Math.max(0,Math.ceil(((pub.discussionEndsAt||Date.now())-Date.now())/1000));
   const el=document.querySelector("#arcadePlay h2");if(el&&el.textContent.startsWith("💬 Discussion"))el.textContent="💬 Discussion · "+String(Math.floor(left/60)).padStart(2,"0")+":"+String(left%60).padStart(2,"0");
+ }else if(snap?.phase==="trivia_question"){
+  const left=Math.max(0,30-Math.floor((Date.now()-(pub.startedAt||Date.now()))/1000));
+  const el=document.getElementById("triviaTimer");if(el)el.textContent=left+"s";
+  const key=String(snap.roomId||snap.code)+":"+pub.questionIndex+":"+pub.startedAt;
+  if(left<=0&&snap.isHost&&triviaTimeoutKey!==key){triviaTimeoutKey=key;sendOnline("trivia_timeout");}
  }
 }
 async function refreshOnline(){
@@ -541,7 +547,8 @@ function renderOnline(){
  
 }else if(s.phase==="trivia_question"){
   const answered=Number(priv.triviaAnsweredIndex)===Number(pub.questionIndex);
-  body='<div class="box"><p class="muted">Question '+(Number(pub.questionIndex||0)+1)+' / 10 · Correct answer: 10 points. Fastest correct answer: +3 bonus.</p><h2>'+esc(pub.question?.text||"Loading question…")+'</h2>'+(answered?'<div class="result">Your answer is locked. Waiting for the other players…</div>':'<div class="choice">'+(pub.question?.answers||[]).map((a,i)=>'<button data-trivia-answer="'+i+'">'+esc(a)+'</button>').join("")+'</div>')+'</div>'+onlineModeration(s);
+  const left=Math.max(0,30-Math.floor((Date.now()-(pub.startedAt||Date.now()))/1000));
+  body='<div class="box"><p class="muted">Question '+(Number(pub.questionIndex||0)+1)+' / 10 · Correct answer: 10 points. Fastest correct answer: +3 bonus. Time left: <b id="triviaTimer">'+left+'s</b></p><h2>'+esc(pub.question?.text||"Loading question…")+'</h2>'+(answered?'<div class="result">Your answer is locked. Waiting for the other players…</div>':'<div class="choice">'+(pub.question?.answers||[]).map((a,i)=>'<button data-trivia-answer="'+i+'">'+esc(a)+'</button>').join("")+'</div>')+'</div>'+onlineModeration(s);
   shell(title,body);play.querySelectorAll("[data-trivia-answer]").forEach(b=>b.onclick=()=>sendOnline("trivia_answer",{answerIndex:Number(b.dataset.triviaAnswer)}));
  }else if(s.phase==="trivia_reveal"){
   const scores=(pub.scores||[]).slice().sort((a,b)=>b.score-a.score);
