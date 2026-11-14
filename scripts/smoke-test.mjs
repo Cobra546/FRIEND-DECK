@@ -55,7 +55,7 @@ assert.ok(arcade.includes("passCount>=s.players.length*2"), "Scrabble must wait 
 assert.match(arcade, /spyVoted/, "Spyfall must lock a player's vote");
 assert.match(arcade, /trivia_timeout/, "Trivia Battle must have a timeout path");
 assert.match(arcade, /triviaTimer/, "Trivia Battle must show its answer timer");
-assert.match(sw, /friend-deck-pwa-v31/, "PWA cache must be refreshed for the latest game files");
+assert.match(sw, /friend-deck-pwa-v32/, "PWA cache must be refreshed for the latest game files");
 assert.ok(sw.includes("scrabble-words.txt"), "CSW24 words must be cached for offline Scrabble");
 const arcadeSrc = html.match(/<script src="([^"]*arcade.js[^"]*)"/)?.[1];
 assert.ok(arcadeSrc && sw.includes("./" + arcadeSrc), "Service worker and HTML must cache the same arcade script version");
