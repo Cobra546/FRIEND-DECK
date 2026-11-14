@@ -4,13 +4,20 @@ import { readFileSync } from "node:fs";
 const html = readFileSync("index.html", "utf8");
 const arcade = readFileSync("arcade.js", "utf8");
 const existing = readFileSync("app.js", "utf8");
+const sw = readFileSync("sw.js", "utf8");
+const scrabbleWords = readFileSync("scrabble-words.txt", "utf8").trim().split(/\\s+/);
 
 const games = [
+  ["two_truths", 3, 15],
+  ["scrabble", 2, 4],
+  ["trivia_battle", 2, 15],
+  ["spyfall", 3, 15],
   ["burning_bridges", 5, 15],
   ["guess_the_facts", 3, 10],
   ["collect_fruits", 4, 20],
   ["imposter", 4, 14],
   ["mafia", 5, 20],
+  ["draw_guess", 2, 15],
 ];
 
 for (const [id, min, max] of games) {
@@ -42,5 +49,15 @@ assert.match(existing, /activeFactText/, "The original Guess the Facts game must
 assert.match(existing, /playAgainBtn/, "The original Guess the Facts rematch flow must remain present");
 assert.match(existing, /window\.__friendDeckEntry/, "Legacy Guess Facts should accept the in-app mode selection");
 assert.doesNotMatch(arcade, /SUPABASE_SERVICE_ROLE_KEY|sb_secret_/i, "No privileged Supabase secret may ship to the browser");
+assert.equal(scrabbleWords.length, 1816, "CSW24 new-word supplement must contain all 1,816 listed words");
+assert.match(arcade, /CSW24 new-word supplement/, "Scrabble must load the supplied CSW24 new-word supplement");
+assert.match(arcade, /passCount>=s\\.players\\.length\\*2/, "Scrabble must wait for two full rounds of passes");
+assert.match(arcade, /spyVoted/, "Spyfall must lock a player's vote");
+assert.match(arcade, /trivia_timeout/, "Trivia Battle must have a timeout path");
+assert.match(arcade, /triviaTimer/, "Trivia Battle must show its answer timer");
+assert.match(sw, /friend-deck-pwa-v28/, "PWA cache must be refreshed for the latest game files");
+assert.match(sw, /scrabble-words\\.txt/, "CSW24 words must be cached for offline Scrabble");
+const arcadeSrc = html.match(/<script src="([^"]*arcade\\.js[^"]*)"/)?.[1];
+assert.ok(arcadeSrc && sw.includes("./" + arcadeSrc), "Service worker and HTML must cache the same arcade script version");
 
 console.log("Friend Deck source smoke checks passed.");
