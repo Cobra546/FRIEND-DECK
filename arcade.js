@@ -215,7 +215,7 @@ function scrabbleCommit(){
  let score=scrabbleScore(word.join(""),move,coords),crosses=[];
  for(const t of all){const vert=[];let y=t.r,x=t.c;while(y>0&&s.board[y-1][x])y--;while(y<15&&(s.board[y][x]||move.some(m=>m.r===y&&m.c===x))){const m=move.find(m=>m.r===y&&m.c===x);vert.push({r:y,c:x,letter:m?.letter||s.board[y][x].letter,old:!m});y++;}if(vert.length>1){const w=vert.map(x=>x.letter).join("");if(!scrabbleWordOK(w))return alert('"'+w+'" is not in the offline word list.');const coords2=vert.map(x=>[x.r,x.c]);crosses.push(scrabbleScore(w,move,coords2));}}
  score+=crosses.reduce((a,b)=>a+b,0);if(move.length===7)score+=50;
- move.forEach(t=>{s.board[t.r][t.c]={letter:t.letter,blank:t.blank};p.rack.splice(p.rack.indexOf(p.rack[t.rackIndex]||""),1);});
+ move.forEach(t=>{s.board[t.r][t.c]={letter:t.letter,blank:t.blank};});
  // Remove rack tiles by original index in descending order to preserve duplicate letters.
  const indices=move.map(t=>t.rackIndex).sort((a,b)=>b-a);indices.forEach(i=>p.rack.splice(i,1));
  p.score+=score;s.passCount=0;scrabbleDraw(p,7-p.rack.length);s.move=[];s.selected=null;
