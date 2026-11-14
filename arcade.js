@@ -223,7 +223,7 @@ function scrabbleCommit(){
  s.turn=(s.turn+1)%s.players.length;scrabbleRender();
 }
 function scrabbleEnd(winnerId=null){const s=state;let best=winnerId||s.players.slice().sort((a,b)=>b.score-a.score)[0]?.id;const winner=s.players.find(p=>p.id===best);shell("Scrabble · Match complete",'<div class="box"><div class="secret">🏆 '+esc(winner?.name||"Player")+' wins!</div>'+s.players.slice().sort((a,b)=>b.score-a.score).map(p=>'<div class="result">'+esc(p.name)+' · '+p.score+' points</div>').join("")+'<button class="btn btn-dark" id="scAgain">Play again ↻</button><button class="btn btn-light" id="scHome">All games</button></div>');document.getElementById("scAgain").onclick=setup;document.getElementById("scHome").onclick=()=>show("arcadeHub");}
-function twoTruthsStart(){state.turn=0;state.truthSets={};twoTruthsWrite();}
+function twoTruthsStart(){state.turn=0;state.truthSets={};state.players.forEach(p=>p.score=0);twoTruthsWrite();}
 function twoTruthsWrite(){
  const s=state;if(s.turn>=s.players.length){s.truthOrder=s.players.map(p=>p.id).sort(()=>Math.random()-.5);s.truthTurn=0;twoTruthsRound();return;}
  const p=s.players[s.turn];s.phase="truth_write";shell("Two Truths & One Lie · "+esc(p.name),'<div class="box"><p class="muted">Pass the phone to '+esc(p.name)+'. Write exactly two truths and one lie. Keep statements fun and avoid private information.</p>'+[0,1,2].map(i=>'<label>Statement '+(i+1)+'</label><input class="truth-input" maxlength="120" placeholder="Write statement '+(i+1)+'…">').join("")+'<p class="muted">Select which statement is the lie.</p><div class="choice">'+[1,2,3].map(n=>'<button type="button" data-lie="'+(n-1)+'">Lie '+n+'</button>').join("")+'</div><p id="truthLieChoice" class="muted">No lie selected.</p><button class="btn btn-dark" id="truthSubmit" disabled>Save my statements</button></div>');
@@ -359,6 +359,8 @@ function openGameMode(id){
  if(['two_truths','scrabble'].includes(id)){
   document.getElementById("modeCreate")?.remove();
   document.getElementById("modeJoin")?.remove();
+  document.querySelector('label[for="modePlayerName"]')?.remove();
+  document.getElementById("modePlayerName")?.remove();
   document.querySelectorAll("#arcadePlay .mode-divider").forEach(x=>x.remove());
   document.querySelector("#arcadePlay .mode-offline").textContent="📱 Start offline game";
   document.querySelector("#arcadePlay .mode-offline").onclick=()=>startSetup(id);
