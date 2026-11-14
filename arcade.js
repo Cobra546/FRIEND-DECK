@@ -224,7 +224,7 @@ function removeOfflinePlayer(id){
 /* Online multiplayer for the four new games. Secrets are issued by the Edge Function and only returned to each player's session. */
 const API_URL="https://antqqabimhgepykkkmwl.supabase.co/functions/v1/multiplayer-game-api";
 const API_KEY="sb_publishable_w6n4kCXq8cJoyd-8PE0HoQ_YBPYoI_7";
-let online=null,pollHandle=null,renderingOnline=false,autoEndedRound=null;
+let online=null,pollHandle=null,renderingOnline=false,autoEndedRound=null,refreshInFlight=false,lastRenderedSnapshot="";
 function saveOnlineSession(){try{if(online)sessionStorage.setItem('friendArcadeSession',JSON.stringify({roomId:online.roomId,token:online.token,playerId:online.playerId,isHost:online.isHost,code:online.code,gameType:online.gameType}));}catch{}}
 function clearOnlineSession(){try{sessionStorage.removeItem('friendArcadeSession')}catch{}}
 async function api(action,extra={}) {
@@ -241,7 +241,7 @@ async function onlineEntry(id,kind,name,code=""){
   if(kind==="create")data=await api("create_room",{name:name.trim(),gameType:id});
   else if(kind==="join"){if(!code.trim())return alert("Enter the 6-character room code.");data=await api("join_room",{name:name.trim(),code:code.trim().toUpperCase()});}
   else return;
-  online={roomId:data.roomId,token:data.token,playerId:data.playerId,isHost:data.isHost,code:data.code,gameType:id,privateState:data.privateState||{},snapshot:null};
+  online={roomId:data.roomId,token:data.token,playerId:data.playerId,isHost:data.isHost,code:data.code,gameType:id,privateState:data.privateState||{},snapshot:null};lastRenderedSnapshot="";
   state={id,title:games.find(x=>x[0]===id)[2],min:games.find(x=>x[0]===id)[3],max:games.find(x=>x[0]===id)[4]};
   show('arcadePlay');saveOnlineSession();
   if(pollHandle)clearInterval(pollHandle);await refreshOnline();if(online)pollHandle=setInterval(refreshOnline,1300);
@@ -274,10 +274,32 @@ function openGameMode(id){
  document.getElementById("modeOffline").onclick=()=>{if(id==="guess_the_facts")launchLegacyGuess("offline",name(),"");else startSetup(id);};
 }
 
+function updateOnlineClock(snap){
+ const pub=snap?.publicState||{};
+ if(snap?.phase==="draw_playing"){
+  const left=Math.max(0,90-Math.floor((Date.now()-(pub.startedAt||Date.now()))/1000));
+  const el=document.getElementById("drawTimer");if(el)el.textContent=left+"s";
+ }else if(snap?.phase==="mafia_discussion"){
+  const left=Math.max(0,Math.ceil(((pub.discussionEndsAt||Date.now())-Date.now())/1000));
+  const el=document.querySelector("#arcadePlay h2");if(el&&el.textContent.startsWith("💬 Discussion"))el.textContent="💬 Discussion · "+String(Math.floor(left/60)).padStart(2,"0")+":"+String(left%60).padStart(2,"0");
+ }
+}
 async function refreshOnline(){
- if(!online||renderingOnline)return;
- try{const snap=await api("snapshot");online.snapshot=snap;online.privateState=snap.privateState||{};online.isHost=snap.isHost;if(!window.__fdDrawing)renderOnline();}
- catch(e){if(String(e.message).includes("session")||String(e.message).includes("active")){clearInterval(pollHandle);pollHandle=null;online=null;clearOnlineSession();alert("You are no longer in this room.");show("arcadeHub");}else console.warn(e);}
+ if(!online||renderingOnline||refreshInFlight)return;
+ refreshInFlight=true;
+ try{
+  const snap=await api("snapshot");
+  const signature=JSON.stringify({phase:snap.phase,publicState:snap.publicState,privateState:snap.privateState,players:snap.players,chat:snap.chat,isHost:snap.isHost,hostPlayerId:snap.hostPlayerId,playerId:snap.playerId,code:snap.code});
+  online.snapshot=snap;online.privateState=snap.privateState||{};online.isHost=snap.isHost;
+  if(!window.__fdDrawing){
+   if(signature!==lastRenderedSnapshot){lastRenderedSnapshot=signature;renderOnline();}
+   else updateOnlineClock(snap);
+  }
+ }catch(e){
+  if(String(e.message).includes("session")||String(e.message).includes("active")){
+   clearInterval(pollHandle);pollHandle=null;online=null;lastRenderedSnapshot="";clearOnlineSession();alert("You are no longer in this room.");show("arcadeHub");
+  }else console.warn("Friend Deck room refresh failed:",e);
+ }finally{refreshInFlight=false;}
 }
 function onlineModeration(snap){
  const me=snap.playerId,host=snap.isHost;
@@ -286,7 +308,7 @@ function onlineModeration(snap){
 function bindModeration(){
  play.querySelectorAll('[data-kick]').forEach(b=>b.onclick=async()=>{if(!confirm("Kick this player?"))return;try{await api("kick",{targetPlayerId:b.dataset.kick});await refreshOnline()}catch(e){alert(e.message)}});
  play.querySelectorAll('[data-voteout]').forEach(b=>b.onclick=async()=>{try{const r=await api("vote_out",{targetPlayerId:b.dataset.voteout});alert(r.removed?"Player removed by majority vote.":"Vote recorded. Majority is required.");await refreshOnline()}catch(e){alert(e.message)}});
- const leave=document.getElementById("leaveOnline");if(leave)leave.onclick=async()=>{try{await api("leave_room");}catch{}clearInterval(pollHandle);pollHandle=null;online=null;clearOnlineSession();show("arcadeHub");};
+ const leave=document.getElementById("leaveOnline");if(leave)leave.onclick=async()=>{try{await api("leave_room");}catch{}clearInterval(pollHandle);pollHandle=null;online=null;lastRenderedSnapshot="";clearOnlineSession();show("arcadeHub");};
 }
 async function sendOnline(type,payload={}){try{await api("submit_action",{type,payload});await refreshOnline()}catch(e){alert(e.message)}}
 function onlineChoice(players,cb,exclude){return '<div class="choice">'+players.filter(p=>p.active!==false&&p.id!==exclude).map(p=>'<button data-online-choice="'+p.id+'">'+esc(p.name||p.display_name)+'</button>').join('')+'</div>'}
@@ -387,7 +409,7 @@ try{
  const saved=JSON.parse(sessionStorage.getItem("friendArcadeSession")||"null");
  const game=saved&&games.find(g=>g[0]===saved.gameType);
  if(saved&&saved.roomId&&saved.token&&game){
-  online={...saved,snapshot:null,privateState:{}};
+  online={...saved,snapshot:null,privateState:{}};lastRenderedSnapshot="";
   state={id:game[0],title:game[2],min:game[3],max:game[4]};
   show("arcadePlay");
   refreshOnline().then(()=>{if(online&&!pollHandle)pollHandle=setInterval(refreshOnline,1300);});
