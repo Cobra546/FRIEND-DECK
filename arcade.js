@@ -192,7 +192,7 @@ function scrabbleStart(){
  const s=state;s.phase="scrabble_play";s.board=Array.from({length:15},()=>Array(15).fill(null));s.bag=scrabbleBag().sort(()=>Math.random()-.5);
  s.players.forEach(p=>{p.rack=[];p.score=0;});s.players.forEach(p=>scrabbleDraw(p,7));
  s.turn=0;s.passCount=0;s.move=[];s.selected=null;s.scrabbleEnded=false;
- scrabbleLoadLexicon().finally(()=>{if(state===s&&s.phase==="scrabble_play")scrabbleRender(true);});
+ scrabbleLoadLexicon().then(()=>{if(state===s&&s.phase==="scrabble_play")scrabbleRender(false);});
  scrabbleRender(true);
 }
 function scrabbleTileAt(r,col){return state.move.find(t=>t.r===r&&t.c===col)||state.board[r][col];}
@@ -561,7 +561,7 @@ function renderOnline(){
  }else if(s.phase==="spy_done"){
   body='<div class="box"><div class="secret">'+(pub.winner==="Group"?'The group wins!':'The Spy wins!')+'</div><div class="result">Secret location: '+esc(pub.location||"—")+'</div><div class="result">Spy: '+esc(players.find(p=>p.id===pub.spyId)?.name||"Unknown")+'</div><p class="muted">'+(pub.spyFound?'The group correctly identified the Spy.':pub.spyWon?'The Spy guessed the location correctly.':'The group did not identify the Spy.')+'</p>'+(s.isHost?'<button class="btn btn-dark" id="restartOnline">Play again ↻</button>':'<p class="muted">Waiting for host to restart…</p>')+'</div>'+onlineModeration(s);
   shell(title,body);document.getElementById("restartOnline")?.addEventListener("click",async()=>{try{await api("restart_room");await refreshOnline()}catch(e){alert(e.message)}});
- else if(s.phase==="draw_choose"){
+ }else if(s.phase==="draw_choose"){
   body='<div class="box"><h2>🎨 Your drawing turn</h2><p class="muted">Only you can see these three words. Choose one, then draw it without writing letters or numbers.</p>'+(pub.drawerId===me?(priv.wordChoices||[]).map(w=>'<button class="draw-word-choice" data-word="'+esc(w)+'">'+esc(w)+'</button>').join(''):'<p class="muted">Waiting for '+esc(players.find(p=>p.id===pub.drawerId)?.name||"the drawer")+' to choose a word…</p>')+'</div>'+onlineModeration(s);shell(title,body);play.querySelectorAll('[data-word]').forEach(b=>b.onclick=()=>sendOnline("draw_choose_word",{word:b.dataset.word}));
  }else if(s.phase==="draw_playing"){
   const left=Math.max(0,90-Math.floor((Date.now()-(pub.startedAt||Date.now()))/1000));
