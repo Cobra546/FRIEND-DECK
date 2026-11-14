@@ -1,4 +1,4 @@
-const CACHE_NAME = "friend-deck-pwa-v13";
+const CACHE_NAME = "friend-deck-pwa-v14";
 
 // These files are required for the installed app and all local game screens.
 const CORE_ASSETS = [
@@ -7,9 +7,9 @@ const CORE_ASSETS = [
   "./manifest.webmanifest",
   "./InShot_20261113_131236610.jpg",
   "./style.css?v=frienddeck-pwa-install-20261111b",
-  "./arcade.js?v=frienddeck-account-name-20261114b",
-  "./app.js?v=frienddeck-account-name-20261114",
-  "./profiles.js?v=frienddeck-account-name-20261114"
+  "./arcade.js?v=frienddeck-avatar-fix-20261114b",
+  "./app.js?v=frienddeck-avatar-fix-20261114",
+  "./profiles.js?v=frienddeck-avatar-fix-20261114"
 ];
 
 // Audio is optional: a missing MP3 must never prevent the app itself installing.
