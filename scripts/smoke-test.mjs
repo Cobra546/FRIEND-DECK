@@ -5,7 +5,7 @@ const html = readFileSync("index.html", "utf8");
 const arcade = readFileSync("arcade.js", "utf8");
 const existing = readFileSync("app.js", "utf8");
 const sw = readFileSync("sw.js", "utf8");
-const scrabbleWords = readFileSync("scrabble-words.txt", "utf8").trim().split(/\\s+/);
+const scrabbleWords = readFileSync("scrabble-words.txt", "utf8").trim().split(/\s+/);
 
 const games = [
   ["two_truths", 3, 15],
