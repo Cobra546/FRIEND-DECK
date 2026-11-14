@@ -51,13 +51,13 @@ assert.match(existing, /window\.__friendDeckEntry/, "Legacy Guess Facts should a
 assert.doesNotMatch(arcade, /SUPABASE_SERVICE_ROLE_KEY|sb_secret_/i, "No privileged Supabase secret may ship to the browser");
 assert.equal(scrabbleWords.length, 1816, "CSW24 new-word supplement must contain all 1,816 listed words");
 assert.match(arcade, /CSW24 new-word supplement/, "Scrabble must load the supplied CSW24 new-word supplement");
-assert.match(arcade, /passCount>=s\\.players\\.length\\*2/, "Scrabble must wait for two full rounds of passes");
+assert.ok(arcade.includes("passCount>=s.players.length*2"), "Scrabble must wait for two full rounds of passes");
 assert.match(arcade, /spyVoted/, "Spyfall must lock a player's vote");
 assert.match(arcade, /trivia_timeout/, "Trivia Battle must have a timeout path");
 assert.match(arcade, /triviaTimer/, "Trivia Battle must show its answer timer");
 assert.match(sw, /friend-deck-pwa-v28/, "PWA cache must be refreshed for the latest game files");
-assert.match(sw, /scrabble-words\\.txt/, "CSW24 words must be cached for offline Scrabble");
-const arcadeSrc = html.match(/<script src="([^"]*arcade\\.js[^"]*)"/)?.[1];
+assert.ok(sw.includes("scrabble-words.txt"), "CSW24 words must be cached for offline Scrabble");
+const arcadeSrc = html.match(/<script src="([^"]*arcade.js[^"]*)"/)?.[1];
 assert.ok(arcadeSrc && sw.includes("./" + arcadeSrc), "Service worker and HTML must cache the same arcade script version");
 
 console.log("Friend Deck source smoke checks passed.");
