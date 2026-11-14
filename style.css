@@ -76,3 +76,13 @@
 .fd-leader-row b{display:flex;align-items:center;gap:7px}
 .fd-leader-avatar{width:27px;height:27px;object-fit:cover;border-radius:9px}
 .fd-close[hidden]{display:none!important}
+
+
+/* Guess the Facts: per-game correct-guess results */
+.results-scoreboard{width:min(100%,560px);margin:22px auto;padding:18px;background:#fff;border:1px solid #e9e1d3;border-radius:18px;box-shadow:0 8px 22px #3325150b}
+.results-scoreboard h2{margin:0 0 13px;font-size:20px}
+.results-score-row{display:flex;align-items:center;gap:11px;padding:11px 4px;border-top:1px solid #eee7df}
+.results-score-row strong{flex:1;min-width:0;overflow-wrap:anywhere}
+.results-score-row>b{color:#76518a;white-space:nowrap}
+.results-rank{width:27px;height:27px;display:grid;place-items:center;border-radius:9px;background:#f2eaf6;color:#76518a;font-size:12px;font-weight:900}
+#playAgainBtn:disabled{opacity:.65;cursor:not-allowed}
