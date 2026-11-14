@@ -1,4 +1,4 @@
-const CACHE_NAME = "friend-deck-pwa-v25";
+const CACHE_NAME = "friend-deck-pwa-v26";
 
 // These files are required for the installed app and all local game screens.
 const CORE_ASSETS = [
