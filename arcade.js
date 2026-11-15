@@ -181,10 +181,10 @@ let scrabbleLexicon=new Set(starterWords);
 let scrabbleLexiconSource="built-in starter list";
 async function scrabbleLoadLexicon(){
  try{
-  const response=await fetch("./scrabble-words.txt",{cache:"no-store"});
+  const response=await fetch("./scrabble-dictionary.txt",{cache:"no-store"});
   if(!response.ok)return;
   const raw=await response.text(),words=raw.toUpperCase().split(/[\s,;]+/).filter(w=>/^[A-Z]{2,15}$/.test(w));
-  if(words.length>=1700){words.forEach(word=>scrabbleLexicon.add(word));scrabbleLexiconSource="CSW24 new-word supplement + built-in starter list";}
+  if(words.length>=14000){words.forEach(word=>scrabbleLexicon.add(word));scrabbleLexiconSource="Expanded English word list + CSW24 supplement";}
  }catch(e){console.info("Optional Scrabble word list unavailable; using starter list.");}
 }
 const scrabbleWordOK=w=>scrabbleLexicon.has(String(w||"").toUpperCase());
