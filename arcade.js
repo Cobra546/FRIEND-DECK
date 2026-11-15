@@ -184,7 +184,7 @@ async function scrabbleLoadLexicon(){
   const response=await fetch("./scrabble-dictionary.txt",{cache:"no-store"});
   if(!response.ok)return;
   const raw=await response.text(),words=raw.toUpperCase().split(/[\s,;]+/).filter(w=>/^[A-Z]{2,15}$/.test(w));
-  if(words.length>=14000){words.forEach(word=>scrabbleLexicon.add(word));scrabbleLexiconSource="Expanded English word list + CSW24 supplement";}
+  if(words.length>=14000){words.forEach(word=>scrabbleLexicon.add(word));scrabbleLexiconSource="CSW24 new-word supplement + expanded English word list";}
  }catch(e){console.info("Optional Scrabble word list unavailable; using starter list.");}
 }
 const scrabbleWordOK=w=>{const word=String(w||"").trim().toUpperCase();return word==="LIE"||scrabbleLexicon.has(word);};
