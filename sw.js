@@ -7,7 +7,7 @@ const CORE_ASSETS = [
   "./manifest.webmanifest",
   "./InShot_20261113_131236610.jpg",
   "./style.css?v=frienddeck-pwa-install-20261111b",
-  "./arcade.js?v=online-truths-scrabble-20261115",
+  "./arcade.js?v=scrabble-centre-dictionary-20261115",
   "./scrabble-words.txt",
   "./app.js?v=frienddeck-results-rematch-20261114",
 ];
